@@ -85,7 +85,11 @@ export function EditOrderPage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <PageHeader title="Editar pedido" description="Cambiá productos, fecha, entrega o el precio final." />
+      <PageHeader
+        title="Editar pedido"
+        description="Cambiá productos, fecha, entrega o el precio final."
+        backTo={{ to: `/orders/${orderId}`, label: 'Pedido' }}
+      />
       <OrderForm
         lockClient
         clientName={order.client?.name ?? undefined}
