@@ -5,7 +5,6 @@ import { DateDisplay } from '@/components/common/date-display';
 import { EmptyState } from '@/components/common/empty-state';
 import { ItemActions } from '@/components/common/item-actions';
 import { TaskPriorityBadge } from '@/components/common/status-badges';
-import { Button } from '@/components/ui/button';
 import { TaskFormDialog } from '@/features/tasks/components/task-form-dialog';
 import { useCompleteTask, useDeleteTask, useTasks } from '@/features/tasks/hooks/use-tasks';
 import { getErrorMessage } from '@/lib/api-error';
@@ -131,11 +130,17 @@ function TaskRow({
             ) : null}
           </div>
         </div>
-        <ItemActions editLabel="Editar tarea" deleteLabel="Eliminar tarea" onEdit={onEdit} onDelete={onDelete} />
+        <ItemActions
+          completed={task.completed}
+          completeLabel="Completar"
+          reopenLabel="Reabrir"
+          editLabel="Editar tarea"
+          deleteLabel="Eliminar tarea"
+          onComplete={onToggle}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
       </div>
-      <Button variant="outline" className="mt-3 w-full sm:w-auto" onClick={onToggle}>
-        {task.completed ? 'Reabrir' : 'Completar'}
-      </Button>
     </li>
   );
 }

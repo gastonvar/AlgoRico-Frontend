@@ -59,14 +59,12 @@ export function ClientDetailPage() {
 
   return (
     <div className="min-w-0">
-      <PageHeader title="Cliente" backTo={{ to: '/clients', label: 'Clientes' }} />
+      <PageHeader backTo={{ to: '/clients', label: 'Clientes' }} />
       <div className="space-y-4 sm:space-y-6">
         <ClientHeader
           client={client}
           onEdit={() => setEditOpen(true)}
-          onNewInteraction={() => setInteractionOpen(true)}
           onNewOrder={() => navigate(`/orders/new?clientId=${client.id}`)}
-          onNewTask={() => setTaskOpen(true)}
           onArchive={() => setArchiveOpen(true)}
           onRestore={async () => {
             try {

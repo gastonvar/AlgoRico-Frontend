@@ -27,13 +27,29 @@ export function ClientDetailBody({ client, onNewInteraction, onNewOrder, onNewTa
       <SectionNav items={CLIENT_DETAIL_NAV} />
       <div className="grid gap-4 lg:grid-cols-3 lg:items-start lg:gap-6">
         <div className="min-w-0 lg:col-span-2">
-          <PageSection id="conversaciones" title="Conversaciones">
-            <ClientTimeline clientId={client.id} onCreate={onNewInteraction} showTitle={false} />
+          <PageSection
+            id="conversaciones"
+            title="Conversaciones"
+            actions={
+              <Button variant="outline" onClick={onNewInteraction}>
+                Nueva conversación
+              </Button>
+            }
+          >
+            <ClientTimeline clientId={client.id} showTitle={false} />
           </PageSection>
         </div>
         <div className="flex min-w-0 flex-col gap-4 lg:gap-6">
-          <PageSection id="pedidos" title="Pedidos">
-            <ClientOrders clientId={client.id} onCreate={onNewOrder} showTitle={false} />
+          <PageSection
+            id="pedidos"
+            title="Pedidos"
+            actions={
+              <Button variant="outline" onClick={onNewOrder}>
+                Nuevo pedido
+              </Button>
+            }
+          >
+            <ClientOrders clientId={client.id} showTitle={false} />
           </PageSection>
           <PageSection
             id="tareas"
@@ -44,7 +60,7 @@ export function ClientDetailBody({ client, onNewInteraction, onNewOrder, onNewTa
               </Button>
             }
           >
-            <TaskListSection clientId={client.id} onCreate={onNewTask} />
+            <TaskListSection clientId={client.id} />
           </PageSection>
           <PageSection
             id="notas"

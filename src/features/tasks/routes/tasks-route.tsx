@@ -220,7 +220,7 @@ function TaskGroup({
       description={`${tasks.length} ${tasks.length === 1 ? 'tarea' : 'tareas'}`}
       className={emphasize ? 'border-warning/40' : undefined}
     >
-      <ul className="divide-y">
+      <ul className="space-y-2">
         {tasks.map((task) => (
           <TaskRow key={task.id} task={task} onComplete={onComplete} onEdit={onEdit} onDelete={onDelete} />
         ))}
@@ -241,31 +241,34 @@ function TaskRow({
   onDelete: (id: string) => void;
 }) {
   return (
-    <li className={`py-4 first:pt-0 last:pb-0 ${task.completed ? 'opacity-60' : ''}`}>
-      <p className={`text-base font-semibold ${task.completed ? 'line-through' : ''}`}>{task.title}</p>
-      {task.dueAt ? (
-        <p className="mt-1 text-sm text-muted-foreground">
-          <DateDisplay value={task.dueAt} mode="relative" />
-        </p>
-      ) : null}
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        <TaskPriorityBadge priority={task.priority} />
-        {task.clientId ? (
-          <Link className="text-sm text-primary" to={`/clients/${task.clientId}`}>
-            {task.clientName ?? 'Cliente'}
-          </Link>
-        ) : null}
-        {task.orderId ? (
-          <Link className="text-sm text-primary" to={`/orders/${task.orderId}`}>
-            Pedido
-          </Link>
-        ) : null}
-      </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Button
-          variant="outline"
-          className="w-full sm:w-auto"
-          onClick={async () => {
+    <li className={`rounded-xl border p-4 ${task.completed ? 'opacity-60' : 'bg-card'}`}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className={`text-base font-semibold ${task.completed ? 'line-through' : ''}`}>{task.title}</p>
+          {task.dueAt ? (
+            <p className="mt-1 text-sm text-muted-foreground">
+              <DateDisplay value={task.dueAt} mode="relative" />
+            </p>
+          ) : null}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <TaskPriorityBadge priority={task.priority} />
+            {task.clientId ? (
+              <Link className="text-sm text-primary" to={`/clients/${task.clientId}`}>
+                {task.clientName ?? 'Cliente'}
+              </Link>
+            ) : null}
+            {task.orderId ? (
+              <Link className="text-sm text-primary" to={`/orders/${task.orderId}`}>
+                Pedido
+              </Link>
+            ) : null}
+          </div>
+        </div>
+        <ItemActions
+          completed={task.completed}
+          editLabel="Editar"
+          deleteLabel="Eliminar"
+          onComplete={async () => {
             try {
               await onComplete({ taskId: task.id, completed: !task.completed });
               toast.success(task.completed ? 'Tarea reabierta.' : 'Tarea completada.');
@@ -273,10 +276,9 @@ function TaskRow({
               toast.error(getErrorMessage(error));
             }
           }}
-        >
-          {task.completed ? 'Reabrir' : 'Completar'}
-        </Button>
-        <ItemActions editLabel="Editar" deleteLabel="Eliminar" onEdit={() => onEdit(task)} onDelete={() => onDelete(task.id)} />
+          onEdit={() => onEdit(task)}
+          onDelete={() => onDelete(task.id)}
+        />
       </div>
     </li>
   );

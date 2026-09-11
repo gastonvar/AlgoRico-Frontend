@@ -5,9 +5,11 @@ import {
   addInteraction,
   addOrder,
   addPayment,
+  addPaymentAttachment,
   addTask,
   buildDashboard,
   calendarEvents,
+  findAttachment,
   getDb,
   paginate,
   refreshOrderFinance,
@@ -128,9 +130,7 @@ export const handlers = [
     return json(created, 201);
   }),
   http.get(`${API}/api/attachments/:attachmentId`, ({ params }) => {
-    const attachment = getDb()
-      .interactions.flatMap((item) => item.attachments)
-      .find((item) => item.id === params.attachmentId);
+    const attachment = findAttachment(String(params.attachmentId));
     if (!attachment) {
       return HttpResponse.json({ error: { code: 'NOT_FOUND', message: 'Attachment not found' } }, { status: 404 });
     }
@@ -257,9 +257,20 @@ export const handlers = [
       amount: number;
       type: 'DEPOSIT' | 'FINAL' | 'OTHER';
       paymentMethod: 'CASH' | 'BANK_TRANSFER' | 'CARD' | 'OTHER';
+      notes?: string;
+      paidAt?: string;
+      hasPaymentReceipt?: boolean;
     };
     const order = addPayment(String(params.orderId), body);
     return json(order, 201);
+  }),
+  http.post(`${API}/api/payments/:paymentId/attachments`, async ({ params, request }) => {
+    const formData = await request.formData();
+    const files = formData.getAll('files') as File[];
+    const created = files.map((file) =>
+      addPaymentAttachment(String(params.paymentId), { name: file.name, type: file.type, size: file.size }),
+    );
+    return json(created, 201);
   }),
   http.patch(`${API}/api/payments/:paymentId`, async ({ params, request }) => {
     const order = getDb().orders.find((item) => item.payments.some((payment) => payment.id === params.paymentId));
