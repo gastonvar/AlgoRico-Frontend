@@ -1,0 +1,35 @@
+---
+description: Bulletproof React component, composition, and styling conventions
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Bulletproof Components
+
+Colocate components, styles, and state as close as possible to where they are used.
+
+## Structure
+
+- Shared UI lives in `src/components` (shadcn/ui + app wrappers). Feature UI lives in `src/features/<domain>/components`.
+- One component, one responsibility. If a piece of UI is a unit, extract it to its own file.
+- Do not nest `renderFoo()` functions inside a component. Extract `<Foo />`.
+- Prefer composition (`children`, slots) over a long props list. If a component takes too many props, split it.
+- Wrap third-party and shadcn primitives in `src/components/ui` so call sites do not depend on the library directly.
+
+```tsx
+// ❌ nested render helpers
+function Page() {
+  function renderList() { return <ul>...</ul> }
+  return <div>{renderList()}</div>
+}
+
+// ✅ extracted unit
+function ItemList() { return <ul>...</ul> }
+function Page() { return <div><ItemList /></div> }
+```
+
+## Styling
+
+- Tailwind only, via `cn`. No ad hoc CSS-in-JS.
+- Identify repetition before adding a shared primitive. Wrong abstractions are worse than duplication.
+- Keep interactive pieces accessible (label, `type`, keyboard). This app is mobile first.

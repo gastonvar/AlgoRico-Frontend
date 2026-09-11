@@ -1,0 +1,40 @@
+---
+description: Bulletproof React API layer: typed fetchers, schemas, and query hooks
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Bulletproof API Layer
+
+One configured Axios instance (`src/lib/api-client.ts`). Declare every endpoint; never inline `apiClient.get` inside a route or component.
+
+## Per endpoint
+
+Each call has:
+
+1. Request/response types and Zod schemas.
+2. A fetcher that uses `apiClient`.
+3. A TanStack Query hook that calls the fetcher.
+
+Keep HTTP in `features/<domain>/api`. Keep hooks in `features/<domain>/hooks` (or beside the fetcher in `api/` if the file stays small). Routes only consume hooks.
+
+```ts
+// features/recipes/api/get-recipes.ts
+export function getRecipes(params: GetRecipesParams) {
+  return apiClient.get<Recipe[]>('/recipes', { params }).then((r) => r.data)
+}
+
+// features/recipes/hooks/use-recipes.ts
+export function useRecipes(params: GetRecipesParams) {
+  return useQuery({
+    queryKey: recipesKeys.list(params),
+    queryFn: () => getRecipes(params),
+    enabled: Boolean(params),
+  })
+}
+```
+
+- Name files after the operation: `get-recipes.ts`, `create-recipe.ts`.
+- Mutations call `queryClient.invalidateQueries` for every stale key family.
+- Parse/validate payloads at the boundary with Zod when the contract can drift.
+- Do not mock `fetch`/`axios` in tests; hit MSW handlers instead.

@@ -1,0 +1,51 @@
+---
+description: AlgoRico frontend architecture and file placement conventions
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# AlgoRico Frontend Architecture
+
+Follow Bulletproof React with strict feature boundaries. Most code lives in `src/features`; shared code stays thin.
+
+## Unidirectional flow
+
+Code flows **shared → features → app** only:
+
+- Shared (`components`, `hooks`, `lib`, `config`, `types`, `utils`, `stores`) must not import from `features` or `app`.
+- Features may import shared code, never `app` or other features.
+- `app` may import features and shared code to compose routes and providers.
+
+Do not create a feature subfolder until it is needed. Put feature-only assets and utils inside that feature.
+
+## Folder layout
+
+- `src/features/<domain>/` — feature modules with `api`, `hooks`, `routes`, `components`, `schemas`, `types`, and `stores` (feature-local Zustand only).
+- `src/app/` — app shell: providers, router, layouts, and cross-feature route/component composition.
+- `src/components/` — shared UI (shadcn/ui and app primitives). No feature imports.
+- `src/lib/` — shared infra (api client, query client, formatting, auth storage).
+- `src/hooks/` — shared hooks (e.g. `use-auth`, `use-theme-mode`).
+- `src/config/` — validated env (`VITE_API_URL`).
+- `src/types/domain.ts` — shared backend entity models.
+- `src/utils/` — shared pure helpers (dates, money, strings).
+- `src/stores/` — truly global client state only (theme, notifications). Prefer feature `stores/` first.
+- `src/testing/` — test utils and MSW handlers.
+
+## Import boundaries
+
+- Features **must not** import from other features.
+- `src/app/**` **may** import from any feature to compose workflows.
+- `src/components/**` **must not** import from `src/features/**`.
+- `src/lib/**` **must not** import from features, except `src/lib/api-client.ts` for session wiring.
+- Any layer may import shared hooks from `src/hooks/**`.
+
+## Data and UI patterns
+
+- Keep routes thin; put HTTP in `api/`, TanStack Query in `hooks/`, and Zod schemas in `schemas/`.
+- Use `src/types/domain.ts` for shared entities; use feature `types/` for request/form shapes.
+- Cross-feature flows compose in `src/app/routes/` or `src/app/components/`.
+- Prefer direct imports; avoid barrel `index.ts` files (hurts Vite tree-shaking).
+- Co-locate tests as `*.test.ts(x)` next to the module.
+- Use absolute `@/` imports.
+- File and folder names are `kebab-case`. Components are `PascalCase`. Hooks are `use-kebab-case.ts`. Functions and variables are `camelCase`.
+- TypeScript strict. Define types before implementation.

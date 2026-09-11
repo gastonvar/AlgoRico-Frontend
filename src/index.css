@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: "Segoe UI", "Helvetica Neue", ui-sans-serif, system-ui, sans-serif;
+  --color-cyan: var(--cyan);
+  --color-pink: var(--pink);
+  --color-cream: var(--cream);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --cyan: #019eaa;
+  --pink: #fa6588;
+  --cream: #ece3d8;
+
+  --radius: 0.75rem;
+  --background: var(--cream);
+  --foreground: color-mix(in oklab, #2a2426 82%, var(--pink));
+  --card: color-mix(in oklab, white 62%, var(--cream));
+  --card-foreground: var(--foreground);
+  --popover: color-mix(in oklab, white 78%, var(--cream));
+  --popover-foreground: var(--foreground);
+  --primary: var(--cyan);
+  --primary-foreground: var(--cream);
+  --secondary: var(--pink);
+  --secondary-foreground: color-mix(in oklab, var(--pink) 12%, #3a1020);
+  --muted: color-mix(in oklab, var(--cream) 78%, var(--pink));
+  --muted-foreground: color-mix(in oklab, var(--foreground) 62%, var(--cream));
+  --accent: color-mix(in oklab, var(--pink) 28%, var(--cream));
+  --accent-foreground: color-mix(in oklab, var(--pink) 18%, #3a1020);
+  --destructive: color-mix(in oklab, #b42318 62%, var(--pink));
+  --destructive-foreground: var(--cream);
+  --border: color-mix(in oklab, var(--pink) 22%, var(--cream));
+  --input: color-mix(in oklab, var(--cyan) 16%, var(--cream));
+  --ring: var(--cyan);
+  --success: var(--cyan);
+  --success-foreground: var(--cream);
+  --warning: color-mix(in oklab, var(--pink) 48%, #8a2e44);
+  --warning-foreground: color-mix(in oklab, var(--pink) 10%, #3a1020);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  button,
+  [role="button"],
+  a,
+  input,
+  textarea,
+  select {
+    @apply touch-manipulation;
+  }
+}

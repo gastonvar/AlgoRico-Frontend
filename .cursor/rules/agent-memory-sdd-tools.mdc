@@ -1,0 +1,15 @@
+---
+description: Use Engram memory and SDD workflow tools during AlgoRico frontend work
+globs: "**/*"
+alwaysApply: false
+---
+
+# Engram And SDD Tools
+
+When working in the AlgoRico frontend, use Engram and SDD tools when they help preserve context or manage a spec-driven change.
+
+- Use Engram MCP memory to search prior context and save important frontend decisions, conventions, discoveries, bug fixes, and session summaries.
+- Before calling any Engram MCP tool, read that tool's descriptor/schema from the MCP tool files.
+- Use SDD skills or SDD subagents for frontend spec-driven workflows: init, exploration, proposal, design, specs, tasks, implementation, verification, archive, and onboarding.
+- Prefer SDD for larger frontend changes that affect routing, auth/data flows, shared UI primitives, forms, accessibility, or user-facing behavior.
+- Keep tool use proportional: do not add workflow overhead for small, obvious edits, but do save meaningful decisions and discoveries to Engram.

@@ -1,0 +1,23 @@
+---
+description: Bulletproof React testing conventions for features and shared code
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Bulletproof Testing
+
+Prefer tests that exercise user-visible behavior over implementation details.
+
+## Pyramid
+
+1. **Integration** (default) — feature workflows: render the route/screen, interact, assert UI.
+2. **Unit** — shared utils and non-trivial pure logic.
+3. **E2E** — critical journeys only, when those tests exist.
+
+## Patterns
+
+- Co-locate as `*.test.ts(x)` next to the module. Shared helpers and MSW live in `src/testing`.
+- Use Testing Library: `render`, user events, roles and labels. Do not assert internals or CSS class names.
+- Use MSW so tests make real HTTP through `apiClient`. Do not mock Axios modules.
+- Gate query hooks with `enabled` and test loading, empty, error, and success where the UI has those states.
+- Shared primitives can have focused tests; do not snapshot entire pages.

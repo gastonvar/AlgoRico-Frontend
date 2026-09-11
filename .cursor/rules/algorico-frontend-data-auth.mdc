@@ -1,0 +1,17 @@
+---
+description: AlgoRico frontend API, auth, and TanStack Query conventions
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# AlgoRico Frontend Data And Auth
+
+- Use `src/lib/api-client.ts` for backend calls; never create ad hoc Axios clients or hardcode `localhost`.
+- Read the backend base URL through `VITE_API_URL` via `src/config/env.ts`.
+- Keep session, CSRF, and storage access centralized (`auth-store` / `auth-storage`); do not log or render tokens.
+- Let `api-client` send cookies (`withCredentials`), attach CSRF when present, and refresh once on `401`.
+- Logout must hit `/auth/logout` before clearing local session when a session exists.
+- Put API functions in `features/<domain>/api` and TanStack Query hooks in `features/<domain>/hooks`.
+- Define stable query key factories near the hooks and invalidate affected keys after every mutation.
+- Treat `403` as an expected permission boundary in the UI; frontend role checks are UX only.
+- Use `getErrorMessage` or an equivalent centralized helper for backend errors, especially `401`, `403`, `404`, and `409`.

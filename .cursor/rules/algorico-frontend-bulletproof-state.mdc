@@ -1,0 +1,24 @@
+---
+description: Bulletproof React state layers: local, app, server, form, and URL
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Bulletproof State
+
+Do not put all state in one store. Pick the layer that matches the data.
+
+## Layers
+
+1. **Component state** — `useState` for independent UI; `useReducer` when one action updates several fields. Start local; lift only when siblings need it.
+2. **Application state** — Zustand for genuine global UI (theme, notifications, a modal that many routes open). Keep it as close as possible. Do not globalize by default. Feature stores live in `features/<domain>/stores`; `src/stores` is for app-wide client state only.
+3. **Server state** — TanStack Query only. Never duplicate server records in Zustand.
+4. **Form state** — React Hook Form + Zod. Do not use `useState` for form fields.
+5. **URL state** — React Router params and search params for filters, ids, and pagination that should be shareable or refresh-safe.
+
+## Rules of thumb
+
+- Server cache is the source of truth for remote data.
+- Mutations update the server, then invalidate query keys. Do not manually sync Zustand with query results.
+- Prefetch with `queryClient.prefetchQuery` when a hover/navigation makes the next screen obvious.
+- Expensive initial values use a state initializer function: `useState(() => compute())`.

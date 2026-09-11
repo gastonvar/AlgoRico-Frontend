@@ -1,0 +1,21 @@
+---
+description: Bulletproof React error handling, code splitting, and performance
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Bulletproof Errors And Performance
+
+## Errors
+
+- Handle API failures in `api-client` (toast or centralized mapping, refresh once on 401, clear session if refresh fails).
+- Put an error boundary around the app **and** around heavy feature routes so one crash does not take down the SPA.
+- Data routes still own loading, empty, error, and forbidden UI. Error boundaries catch render/unexpected failures, not expected `403`/`404` JSON.
+- Do not log tokens, cookies, or personal data in error payloads.
+
+## Performance
+
+- Lazy-load heavy routes with `React.lazy` + `Suspense`. Split at the route boundary, not every component.
+- Colocate state to cut extra rerenders. Use `children` to isolate expensive subtrees from parent state.
+- Do not wrap everything in `useMemo`/`useCallback`. Memoize when a measured rerender or an unstable dependency needs it.
+- Keep query `staleTime` and retries in `src/lib/query-client.ts`; override per hook only when the screen needs polling or no-retry 4xx.

@@ -1,0 +1,17 @@
+---
+description: AlgoRico frontend UI, forms, accessibility, and verification conventions
+globs: src/**/*.{ts,tsx,css}
+alwaysApply: false
+---
+
+# AlgoRico Frontend UI, Forms, And Quality
+
+- Build screens with shadcn/ui and existing primitives from `src/components/ui`, `src/components/layout`, and `src/components/feedback` before adding new primitives.
+- Use Tailwind classes through existing `cn` helpers and keep responsive states explicit.
+- User-facing copy is Spanish; keep labels, toasts, loading, empty, and error states consistent.
+- Validate forms with Zod schemas and `react-hook-form`; show field errors through shared form primitives.
+- Use compound components only where related subparts share state or structure, such as `Dialog`, `DialogTrigger`, and `DialogContent`.
+- Every data-driven route should handle loading, empty, error, and forbidden states where applicable.
+- Keep interactive controls accessible with labels, button `type`, keyboard-friendly behavior, and semantic roles when needed.
+- This app is mobile first.
+- Before finishing substantive frontend changes, run available checks from this package: `npm run typecheck`, `npm run lint`, `npm run test`, and `npm run build` when practical.
