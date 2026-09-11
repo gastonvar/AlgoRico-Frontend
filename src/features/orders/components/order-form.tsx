@@ -80,7 +80,10 @@ export function OrderForm({
   return (
     <form className="space-y-4 lg:space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
       <section className="space-y-4 rounded-xl border bg-card p-4 lg:p-5">
-        <h2 className="text-base font-semibold lg:text-lg">Cliente y fecha</h2>
+        <div>
+          <h2 className="text-base font-semibold lg:text-lg">Cliente y fecha</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Quién pide y cuándo es el evento.</p>
+        </div>
         {lockClient ? (
           <Field>
             <Label>Cliente</Label>
@@ -145,8 +148,11 @@ export function OrderForm({
       </section>
 
       <section className="space-y-4 rounded-xl border bg-card p-4 lg:p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-base font-semibold lg:text-lg">Productos</h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-base font-semibold lg:text-lg">Productos</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Qué hay que hacer y el precio.</p>
+          </div>
           <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => items.append(emptyItem)}>
             Agregar producto
           </Button>
@@ -206,7 +212,10 @@ export function OrderForm({
       </section>
 
       <section className="space-y-4 rounded-xl border bg-card p-4 lg:p-5">
-        <h2 className="text-base font-semibold lg:text-lg">Entrega</h2>
+        <div>
+          <h2 className="text-base font-semibold lg:text-lg">Entrega</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Retiro o envío, y notas extras.</p>
+        </div>
         <Field>
           <Label htmlFor="fulfillmentType">Tipo</Label>
           <NativeSelect id="fulfillmentType" {...form.register('fulfillmentType')}>

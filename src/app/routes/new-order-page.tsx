@@ -52,7 +52,11 @@ export function NewOrderPage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <PageHeader title="Nuevo pedido" description="El pedido siempre queda asociado a un cliente." />
+      <PageHeader
+        title="Nuevo pedido"
+        description="El pedido siempre queda asociado a un cliente."
+        backTo={{ to: '/orders', label: 'Pedidos' }}
+      />
       <OrderForm
         defaultClientId={defaultClientId}
         clientQuery={clientQuery}
