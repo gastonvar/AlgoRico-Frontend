@@ -101,7 +101,7 @@ export function ClientHeader({
         </Button>
         {client.archivedAt ? (
           <Button
-            className="w-full whitespace-normal px-2 text-center sm:w-auto sm:whitespace-nowrap sm:px-4"
+            className="col-span-2 w-full whitespace-normal px-2 text-center sm:w-auto sm:whitespace-nowrap sm:px-4"
             variant="secondary"
             onClick={onRestore}
           >
@@ -109,7 +109,7 @@ export function ClientHeader({
           </Button>
         ) : (
           <Button
-            className="w-full whitespace-normal px-2 text-center sm:w-auto sm:whitespace-nowrap sm:px-4"
+            className="col-span-2 w-full whitespace-normal px-2 text-center sm:w-auto sm:whitespace-nowrap sm:px-4"
             variant="ghost"
             onClick={onArchive}
           >

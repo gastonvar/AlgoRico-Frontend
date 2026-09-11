@@ -12,7 +12,7 @@ export function ClientNotes({ client }: { client: Client }) {
   const dirty = notes !== (client.notes ?? '');
 
   return (
-    <div className="min-w-0">
+    <>
       <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} />
       <div className="mt-3 flex justify-end">
         <Button
@@ -30,6 +30,6 @@ export function ClientNotes({ client }: { client: Client }) {
           {update.isPending ? 'Guardando…' : 'Guardar notas'}
         </Button>
       </div>
-    </div>
+    </>
   );
 }
