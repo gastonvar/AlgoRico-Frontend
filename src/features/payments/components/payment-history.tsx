@@ -41,6 +41,9 @@ function PaymentRow({ payment, orderId }: { payment: Payment; orderId: string })
             <DateDisplay value={payment.paidAt} mode="relative" />
           </p>
           <MoneyDisplay amount={payment.amount} emphasize className="mt-1" />
+          <p className="mt-1 text-sm text-muted-foreground">
+            {payment.hasPaymentReceipt ? 'Con comprobante' : 'Sin comprobante'}
+          </p>
           {payment.notes ? <p className="mt-1 break-words text-sm">{payment.notes}</p> : null}
         </div>
         <ItemActions

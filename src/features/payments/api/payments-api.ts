@@ -7,6 +7,7 @@ export type CreatePaymentInput = {
   paymentMethod: string;
   paidAt?: string;
   notes?: string;
+  hasPaymentReceipt?: boolean;
 };
 
 export type UpdatePaymentInput = {
@@ -15,6 +16,7 @@ export type UpdatePaymentInput = {
   paymentMethod?: string;
   paidAt?: string;
   notes?: string | null;
+  hasPaymentReceipt?: boolean;
 };
 
 export async function listPayments(orderId: string): Promise<Payment[]> {

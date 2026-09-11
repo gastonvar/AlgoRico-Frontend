@@ -44,9 +44,11 @@ describe('orders and payments', () => {
     await user.click(screen.getByRole('button', { name: 'Registrar pago' }));
     await user.clear(screen.getByLabelText('Monto'));
     await user.type(screen.getByLabelText('Monto'), '1000');
+    await user.click(screen.getByRole('checkbox', { name: 'Comprobante de pago' }));
     await user.click(screen.getByRole('button', { name: 'Registrar' }));
 
     expect((await screen.findAllByText('Pago parcial')).length).toBeGreaterThan(0);
+    expect(await screen.findByText('Con comprobante')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Registrar pago' }));
     await user.clear(screen.getByLabelText('Monto'));
@@ -55,6 +57,7 @@ describe('orders and payments', () => {
     await user.click(screen.getByRole('button', { name: 'Registrar' }));
 
     expect((await screen.findAllByText('Pagado')).length).toBeGreaterThan(0);
+    expect(screen.getByText('Sin comprobante')).toBeInTheDocument();
   });
 
   it('records a conversation on the order timeline', async () => {

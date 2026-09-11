@@ -207,6 +207,37 @@ export function addAttachment(interactionId: string, file: { name: string; type:
   return attachment;
 }
 
+export function addPaymentAttachment(paymentId: string, file: { name: string; type: string; size: number }): Attachment {
+  const attachment: Attachment = {
+    id: `attachment-${Math.random().toString(16).slice(2)}`,
+    interactionId: null,
+    paymentId,
+    originalFilename: file.name,
+    mimeType: file.type,
+    fileSize: file.size,
+    createdAt: isoNow(),
+    updatedAt: isoNow(),
+  };
+  for (const order of db.orders) {
+    const payment = order.payments.find((item) => item.id === paymentId);
+    if (payment) {
+      payment.attachments.push(attachment);
+      break;
+    }
+  }
+  return attachment;
+}
+
+export function findAttachment(attachmentId: string): Attachment | undefined {
+  const interactionAttachment = db.interactions
+    .flatMap((item) => item.attachments)
+    .find((item) => item.id === attachmentId);
+  if (interactionAttachment) return interactionAttachment;
+  return db.orders
+    .flatMap((order) => order.payments.flatMap((payment) => payment.attachments))
+    .find((item) => item.id === attachmentId);
+}
+
 export function addOrder(clientId: string, input: Partial<Order>): Order {
   const client = db.clients.find((item) => item.id === clientId) ?? null;
   const items = input.items ?? [];
@@ -254,6 +285,7 @@ export function addPayment(
     paymentMethod: Order['payments'][number]['paymentMethod'];
     paidAt?: string;
     notes?: string | null;
+    hasPaymentReceipt?: boolean;
   },
 ) {
   const order = db.orders.find((item) => item.id === orderId);
@@ -266,6 +298,7 @@ export function addPayment(
     paymentMethod: input.paymentMethod,
     paidAt: input.paidAt ?? isoNow(),
     notes: input.notes ?? null,
+    hasPaymentReceipt: input.hasPaymentReceipt ?? false,
     attachments: [],
     createdAt: isoNow(),
     updatedAt: isoNow(),

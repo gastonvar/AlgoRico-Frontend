@@ -48,7 +48,7 @@ export function ClientOrders({
   showTitle = true,
 }: {
   clientId: string;
-  onCreate: () => void;
+  onCreate?: () => void;
   showTitle?: boolean;
 }) {
   const orders = useOrders({ clientId, pageSize: 50 });
@@ -62,7 +62,7 @@ export function ClientOrders({
         <EmptyState
           title="Todavía no hay pedidos."
           description="Cuando esta cliente confirme un trabajo, crealo acá."
-          actionLabel="Nuevo pedido"
+          actionLabel={onCreate ? 'Nuevo pedido' : undefined}
           onAction={onCreate}
         />
       ) : null}

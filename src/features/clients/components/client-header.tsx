@@ -8,9 +8,7 @@ import type { ClientDetail } from '@/types/domain';
 type ClientHeaderProps = {
   client: ClientDetail;
   onEdit: () => void;
-  onNewInteraction: () => void;
   onNewOrder: () => void;
-  onNewTask: () => void;
   onArchive: () => void;
   onRestore: () => void;
 };
@@ -21,9 +19,7 @@ const statLinkClassName =
 export function ClientHeader({
   client,
   onEdit,
-  onNewInteraction,
   onNewOrder,
-  onNewTask,
   onArchive,
   onRestore,
 }: ClientHeaderProps) {
@@ -76,13 +72,7 @@ export function ClientHeader({
         </a>
       </div>
       <div className="mt-4 grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-        <Button className="w-full whitespace-normal px-2 text-center sm:w-auto sm:whitespace-nowrap sm:px-4" onClick={onNewInteraction}>
-          Nueva conversación
-        </Button>
-        <Button
-          className="w-full whitespace-normal px-2 text-center sm:w-auto sm:whitespace-nowrap sm:px-4"
-          onClick={onNewOrder}
-        >
+        <Button className="w-full whitespace-normal px-2 text-center sm:w-auto sm:whitespace-nowrap sm:px-4" onClick={onNewOrder}>
           Nuevo pedido
         </Button>
         <Button
@@ -92,16 +82,9 @@ export function ClientHeader({
         >
           Editar
         </Button>
-        <Button
-          className="w-full whitespace-normal px-2 text-center sm:w-auto sm:whitespace-nowrap sm:px-4"
-          variant="outline"
-          onClick={onNewTask}
-        >
-          Nueva tarea
-        </Button>
         {client.archivedAt ? (
           <Button
-            className="col-span-2 w-full whitespace-normal px-2 text-center sm:w-auto sm:whitespace-nowrap sm:px-4"
+            className="w-full whitespace-normal px-2 text-center sm:w-auto sm:whitespace-nowrap sm:px-4"
             variant="secondary"
             onClick={onRestore}
           >
@@ -109,7 +92,7 @@ export function ClientHeader({
           </Button>
         ) : (
           <Button
-            className="col-span-2 w-full whitespace-normal px-2 text-center sm:w-auto sm:whitespace-nowrap sm:px-4"
+            className="w-full whitespace-normal px-2 text-center sm:w-auto sm:whitespace-nowrap sm:px-4"
             variant="ghost"
             onClick={onArchive}
           >

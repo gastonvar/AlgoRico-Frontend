@@ -32,4 +32,4 @@ function Page() { return <div><ItemList /></div> }
 
 - Tailwind only, via `cn`. No ad hoc CSS-in-JS.
 - Identify repetition before adding a shared primitive. Wrong abstractions are worse than duplication.
-- Keep interactive pieces accessible (label, `type`, keyboard). This app is mobile first.
+- Keep interactive pieces accessible (label, `type`, keyboard). Follow the mobile-first layout rule.

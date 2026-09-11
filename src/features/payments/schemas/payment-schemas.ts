@@ -7,6 +7,7 @@ export const paymentFormSchema = z.object({
   paymentMethod: z.enum(PAYMENT_METHODS),
   paidAt: z.string().min(1, 'La fecha es obligatoria.'),
   notes: z.string().optional(),
+  hasPaymentReceipt: z.boolean(),
 });
 
 export type PaymentFormValues = z.infer<typeof paymentFormSchema>;

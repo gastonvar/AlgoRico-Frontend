@@ -54,7 +54,7 @@ export function OrderDetailPage() {
 
   return (
     <div>
-      <PageHeader title="Pedido" backTo={{ to: '/orders', label: 'Pedidos' }} />
+      <PageHeader backTo={{ to: '/orders', label: 'Pedidos' }} />
       <OrderDetailHeader order={order} onDelete={() => setDeleteOpen(true)} />
 
       <div className="mt-4 flex flex-col gap-4 lg:mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-x-6 lg:gap-y-4">

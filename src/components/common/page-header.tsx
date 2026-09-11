@@ -1,9 +1,10 @@
 import { ChevronLeft } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
+import { cn } from '@/lib/utils';
 
 type PageHeaderProps = {
-  title: string;
+  title?: string;
   description?: string;
   actions?: ReactNode;
   backTo?: { to: string; label: string };
@@ -11,18 +12,23 @@ type PageHeaderProps = {
 
 export function PageHeader({ title, description, actions, backTo }: PageHeaderProps) {
   return (
-    <div className="mb-4 flex flex-col gap-3 lg:mb-6 lg:flex-row lg:items-start lg:justify-between">
+    <div
+      className={cn(
+        'mb-4 flex flex-col gap-3 lg:mb-6 lg:flex-row lg:items-start lg:justify-between',
+        !description && !actions && 'max-lg:hidden',
+      )}
+    >
       <div className="min-w-0">
         {backTo ? (
           <Link
             to={backTo.to}
-            className="mb-1 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+            className="mb-1 hidden items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground lg:inline-flex"
           >
             <ChevronLeft className="h-4 w-4" />
             {backTo.label}
           </Link>
         ) : null}
-        <h1 className="hidden text-2xl font-semibold tracking-tight lg:block">{title}</h1>
+        {title ? <h1 className="hidden text-2xl font-semibold tracking-tight lg:block">{title}</h1> : null}
         {description ? <p className="text-sm text-muted-foreground lg:mt-1">{description}</p> : null}
       </div>
       {actions ? (

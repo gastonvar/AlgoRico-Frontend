@@ -1,0 +1,39 @@
+---
+description: Mobile-first layout, tap targets, and progressive enhancement for AlgoRico screens
+globs: src/**/*.{ts,tsx,css}
+alwaysApply: false
+---
+
+# Mobile First
+
+Design the phone layout first. Desktop is an enhancement at `lg`, not the default that gets squeezed down.
+
+## Layout
+
+- Default to a **single column**. Use `flex-col` / stacked sections. Two-column grids and sticky sidebars only from `lg:` up.
+- Put the glanceable facts first on small screens (identity, date, money, primary action). Secondary blocks (timeline, tasks, notes) come after.
+- Reorder with `order-*` when the desktop grid would bury what a phone user needs first.
+- Keep `min-w-0` on flex/grid children so long names and amounts do not overflow.
+
+```tsx
+// ❌ desktop-first: two columns everywhere, money buried
+<div className="grid grid-cols-[1fr_20rem] gap-6">...</div>
+
+// ✅ phone column, sidebar only on large screens
+<div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem]">
+  <aside className="order-1 lg:order-none lg:sticky lg:top-32">...</aside>
+</div>
+```
+
+## Controls And Chrome
+
+- Actions are **full width** on mobile (`w-full`), `sm:w-auto` or `lg:w-auto` after that.
+- Tap targets at least `min-h-11` (and `min-h-14` for the bottom tab bar). Do not ship `h-9` chips as the only way to jump sections on a phone.
+- Sticky top header + bottom tabs already consume vertical space. Do not add a second back control on mobile; hide `PageHeader` back links below `lg`.
+- Safe areas: keep `env(safe-area-inset-*)` on the header, main padding, and tab bar.
+- Dialogs stay bottom sheets on small screens (existing `Dialog` primitive). Do not switch them to centered modals on mobile.
+
+## What Stays Desktop-Only
+
+- Sidebar nav, page `h1` in `PageHeader`, month calendar grid, sticky money sidebar: `lg:` or `lg:block` / `lg:hidden` as today.
+- Dense tables and multi-field filter rows: collapse behind a toggle below `md`, keep the list scannable.

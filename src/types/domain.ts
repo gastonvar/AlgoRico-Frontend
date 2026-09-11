@@ -117,6 +117,7 @@ export type Payment = {
   paymentMethod: PaymentMethod;
   paidAt: string;
   notes: string | null;
+  hasPaymentReceipt: boolean;
   attachments: Attachment[];
   createdAt: string;
   updatedAt: string;
