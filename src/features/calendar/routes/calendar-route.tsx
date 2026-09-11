@@ -6,6 +6,7 @@ import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
 import { LoadingSkeleton } from '@/components/common/loading-skeleton';
 import { PageHeader } from '@/components/common/page-header';
+import { PageSection } from '@/components/common/page-section';
 import { FulfillmentBadge, OrderStatusBadge } from '@/components/common/status-badges';
 import { useCalendar } from '@/features/calendar/hooks/use-calendar';
 import { cn } from '@/lib/utils';
@@ -13,7 +14,6 @@ import { addDays, eachDayOfMonthGrid, formatDateOnlyLocal, startOfWeekDate } fro
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { CalendarEvent } from '@/types/domain';
-import { fulfillmentLabels } from '@/utils/labels';
 
 type View = 'month' | 'week' | 'day';
 
@@ -22,6 +22,8 @@ const VIEW_OPTIONS: { id: View; label: string }[] = [
   { id: 'week', label: 'Semana' },
   { id: 'day', label: 'Día' },
 ];
+
+const MONTH_CELL_CHIP_LIMIT = 3;
 
 export function CalendarRoute() {
   const [cursor, setCursor] = useState(() => new Date());
@@ -38,49 +40,68 @@ export function CalendarRoute() {
       list.push(event);
       map.set(event.eventDate, list);
     }
+    for (const list of map.values()) {
+      list.sort(compareEventsByTime);
+    }
     return map;
   }, [calendar.data]);
 
-  const heading =
-    view === 'day'
-      ? format(cursor, 'EEEE d MMMM yyyy', { locale: es })
-      : format(cursor, 'MMMM yyyy', { locale: es });
+  const heading = periodHeading(cursor, view, range);
 
   return (
-    <div>
+    <div className="min-w-0">
       <PageHeader title="Calendario" description="Los eventos del calendario son pedidos, no conversaciones." />
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <div
-          className="grid w-full grid-cols-3 rounded-lg border bg-muted p-0.5 sm:inline-flex sm:w-auto"
-          role="group"
-          aria-label="Vista"
-        >
-          {VIEW_OPTIONS.map((option) => (
-            <Button
-              key={option.id}
-              size="sm"
-              variant={view === option.id ? 'default' : 'ghost'}
-              aria-pressed={view === option.id}
-              className="min-w-0 px-2"
-              onClick={() => setView(option.id)}
-            >
-              {option.label}
+      <nav
+        aria-label="Período del calendario"
+        className="sticky top-[3.25rem] z-20 -mx-3 mb-4 border-y bg-background/95 px-3 py-2 backdrop-blur sm:-mx-4 sm:px-4 lg:top-[3.75rem] lg:mx-0 lg:rounded-xl lg:border lg:px-3"
+      >
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-3">
+          <div
+            className="grid w-full shrink-0 grid-cols-3 rounded-lg border bg-muted p-0.5 lg:inline-flex lg:w-auto"
+            role="group"
+            aria-label="Vista"
+          >
+            {VIEW_OPTIONS.map((option) => (
+              <Button
+                key={option.id}
+                size="sm"
+                variant={view === option.id ? 'default' : 'ghost'}
+                aria-pressed={view === option.id}
+                className="min-w-0 px-2"
+                onClick={() => setView(option.id)}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </div>
+          <div className="flex min-w-0 items-center gap-1">
+            <Button size="sm" variant="outline" className="shrink-0" onClick={() => setCursor(new Date())}>
+              Hoy
             </Button>
-          ))}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="shrink-0"
+              aria-label="Anterior"
+              onClick={() => setCursor(shift(cursor, view, -1))}
+            >
+              <ChevronLeft />
+            </Button>
+            <p className="min-w-0 flex-1 truncate text-center text-sm font-semibold lg:px-2 lg:text-left">
+              {capitalizeHeading(heading)}
+            </p>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="shrink-0"
+              aria-label="Siguiente"
+              onClick={() => setCursor(shift(cursor, view, 1))}
+            >
+              <ChevronRight />
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-1">
-          <Button size="sm" variant="outline" onClick={() => setCursor(new Date())}>
-            Hoy
-          </Button>
-          <Button size="sm" variant="ghost" aria-label="Anterior" onClick={() => setCursor(shift(cursor, view, -1))}>
-            <ChevronLeft />
-          </Button>
-          <Button size="sm" variant="ghost" aria-label="Siguiente" onClick={() => setCursor(shift(cursor, view, 1))}>
-            <ChevronRight />
-          </Button>
-        </div>
-        <p className="w-full text-sm font-medium capitalize sm:w-auto">{heading}</p>
-      </div>
+      </nav>
       {calendar.isLoading ? <LoadingSkeleton /> : null}
       {calendar.error ? <ErrorState error={calendar.error} onRetry={() => void calendar.refetch()} /> : null}
       {calendar.data ? (
@@ -135,6 +156,30 @@ function shift(cursor: Date, view: View, amount: number) {
   return new Date(cursor.getFullYear(), cursor.getMonth() + amount, 1);
 }
 
+function periodHeading(cursor: Date, view: View, range: { days: Date[] }) {
+  if (view === 'day') {
+    return format(cursor, "EEEE d 'de' MMMM yyyy", { locale: es });
+  }
+  if (view === 'week') {
+    const start = range.days[0] as Date;
+    const end = range.days[6] as Date;
+    return `${format(start, 'd MMM', { locale: es })} – ${format(end, 'd MMM yyyy', { locale: es })}`;
+  }
+  return format(cursor, 'MMMM yyyy', { locale: es });
+}
+
+function compareEventsByTime(a: CalendarEvent, b: CalendarEvent) {
+  return (a.eventTime ?? '99:99').localeCompare(b.eventTime ?? '99:99');
+}
+
+function eventTimeLabel(event: CalendarEvent) {
+  return event.eventTime ? event.eventTime.slice(0, 5) : 'Sin hora';
+}
+
+function capitalizeHeading(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
 function MonthGrid({
   range,
   cursor,
@@ -157,18 +202,27 @@ function MonthGrid({
       {range.days.map((day) => {
         const key = formatDateOnlyLocal(day);
         const events = eventsByDate.get(key) ?? [];
+        const visible = events.slice(0, MONTH_CELL_CHIP_LIMIT);
+        const extra = events.length - visible.length;
         const isToday = key === todayKey;
         const inMonth = day.getMonth() === month;
         return (
           <div
             key={key}
-            className={cn('min-h-20 min-w-0 bg-card p-1', !inMonth && 'bg-muted/40 text-muted-foreground')}
+            className={cn(
+              'flex min-h-20 min-w-0 flex-col overflow-hidden bg-card p-1',
+              !inMonth && 'bg-muted/40 text-muted-foreground',
+              isToday && 'ring-1 ring-inset ring-primary/40',
+            )}
           >
-            <p className={cn('text-xs', isToday && 'font-semibold text-primary')}>{format(day, 'd')}</p>
-            <div className="mt-1 space-y-0.5">
-              {events.map((event) => (
-                <EventChip key={event.id} event={event} compact />
+            <p className={cn('shrink-0 text-xs', isToday && 'font-semibold text-primary')}>{format(day, 'd')}</p>
+            <div className="mt-1 min-w-0 space-y-0.5 overflow-hidden">
+              {visible.map((event) => (
+                <EventChip key={event.id} event={event} />
               ))}
+              {extra > 0 ? (
+                <p className="truncate px-1 text-[10px] leading-tight text-muted-foreground">+{extra}</p>
+              ) : null}
             </div>
           </div>
         );
@@ -188,57 +242,57 @@ function ListView({
   if (!hasEvents) {
     return <EmptyState title="No hay pedidos en este período." description="Los pedidos con fecha van a aparecer acá." />;
   }
+  const todayKey = formatDateOnlyLocal(new Date());
   return (
     <div className="space-y-3">
       {days.map((day) => {
         const key = formatDateOnlyLocal(day);
         const events = eventsByDate.get(key) ?? [];
         if (events.length === 0) return null;
+        const isToday = key === todayKey;
         return (
-          <section key={key} className="rounded-xl border bg-card p-3 sm:p-4">
-            <h2 className="text-sm font-medium capitalize sm:text-base">{format(day, 'EEEE d MMMM', { locale: es })}</h2>
-            <div className="mt-2 space-y-2">
+          <PageSection
+            key={key}
+            title={capitalizeHeading(format(day, "EEEE d 'de' MMMM", { locale: es }))}
+            description={isToday ? 'Hoy' : undefined}
+          >
+            <div className="space-y-2">
               {events.map((event) => (
-                <EventChip key={event.id} event={event} detailed />
+                <EventCard key={event.id} event={event} />
               ))}
             </div>
-          </section>
+          </PageSection>
         );
       })}
     </div>
   );
 }
 
-function EventChip({
-  event,
-  detailed = false,
-  compact = false,
-}: {
-  event: CalendarEvent;
-  detailed?: boolean;
-  compact?: boolean;
-}) {
+function EventChip({ event }: { event: CalendarEvent }) {
   return (
     <Link
       to={`/orders/${event.id}`}
-      className={cn(
-        'block rounded-md bg-primary/10 px-2 py-1 text-xs hover:bg-primary/20',
-        compact && 'truncate px-1 py-0.5',
-      )}
+      className="block min-w-0 truncate rounded-md bg-primary/10 px-1 py-0.5 text-[10px] leading-tight hover:bg-primary/20"
     >
-      <span className="font-medium">{event.eventTime ? event.eventTime.slice(0, 5) : 'Sin hora'}</span>
+      <span className="font-medium">{eventTimeLabel(event)}</span>
       <span className="ml-1">{event.clientName}</span>
-      {detailed ? (
-        <span className="mt-1 flex flex-wrap gap-1">
-          <span>{event.description || 'Pedido'}</span>
-          <FulfillmentBadge type={event.fulfillmentType} />
-          <OrderStatusBadge status={event.status} />
-        </span>
-      ) : compact ? null : (
-        <span className="ml-1 text-muted-foreground">
-          {fulfillmentLabels[event.fulfillmentType as 'PICKUP' | 'DELIVERY'] ?? event.fulfillmentType}
-        </span>
-      )}
+    </Link>
+  );
+}
+
+function EventCard({ event }: { event: CalendarEvent }) {
+  return (
+    <Link
+      to={`/orders/${event.id}`}
+      className="block min-w-0 rounded-lg border bg-background p-3 hover:bg-accent/40"
+    >
+      <p className="text-sm font-semibold tabular-nums">{eventTimeLabel(event)}</p>
+      <p className="mt-0.5 font-medium">{event.clientName}</p>
+      <p className="mt-0.5 text-sm text-muted-foreground">{event.description || 'Pedido'}</p>
+      <span className="mt-2 flex flex-wrap gap-1">
+        <FulfillmentBadge type={event.fulfillmentType} />
+        <OrderStatusBadge status={event.status} />
+      </span>
     </Link>
   );
 }

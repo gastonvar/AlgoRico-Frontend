@@ -15,7 +15,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useOrders } from '@/features/orders/hooks/use-orders';
 import { cn } from '@/lib/utils';
-import { FULFILLMENT_TYPES, ORDER_STATUSES, PAYMENT_STATUSES } from '@/types/domain';
+import { FULFILLMENT_TYPES, ORDER_STATUSES, PAYMENT_STATUSES, type FulfillmentType, type Order, type OrderStatus, type PaymentStatus } from '@/types/domain';
+import { formatEventDateShort } from '@/utils/dates';
 import { fulfillmentLabels, orderStatusLabels, paymentStatusLabels } from '@/utils/labels';
 
 export function OrdersRoute() {
@@ -39,6 +40,7 @@ export function OrdersRoute() {
     page,
     pageSize: 20,
   });
+  const activeFilterLabels = getActiveFilterLabels({ status, paymentStatus, fulfillmentType, from, to });
 
   function update(next: Record<string, string>) {
     const nextParams = new URLSearchParams(params);
@@ -68,15 +70,23 @@ export function OrdersRoute() {
         <div className="min-w-0">
           <button
             type="button"
-            className="flex h-11 w-full items-center rounded-lg border border-input bg-card px-3 text-sm font-medium shadow-sm md:hidden"
+            className="flex h-11 w-full items-center gap-2 rounded-lg border border-input bg-card px-3 text-sm font-medium shadow-sm md:hidden"
             aria-expanded={filtersOpen}
             onClick={() => setFiltersOpen((open) => !open)}
           >
-            Filtros
+            <span>Filtros</span>
+            {activeFilterLabels.length > 0 ? (
+              <span className="ml-auto tabular-nums text-muted-foreground">{activeFilterLabels.length}</span>
+            ) : null}
           </button>
+          {!filtersOpen && activeFilterLabels.length > 0 ? (
+            <p className="mt-2 min-w-0 break-words text-xs text-muted-foreground md:hidden">
+              Filtros activos: {activeFilterLabels.join(' · ')}
+            </p>
+          ) : null}
           <div
             className={cn(
-              'grid gap-3 md:grid-cols-5',
+              'grid gap-3 sm:grid-cols-2 lg:grid-cols-5',
               filtersOpen ? 'mt-3 md:mt-0' : 'hidden md:grid',
             )}
           >
@@ -121,47 +131,92 @@ export function OrdersRoute() {
       ) : null}
       {orders.data ? (
         <>
-          <div className="min-w-0 space-y-2">
+          <ul className="min-w-0 space-y-2">
             {orders.data.data.map((order) => (
-              <Link
-                key={order.id}
-                to={`/orders/${order.id}`}
-                className="block min-w-0 rounded-xl border bg-card p-4 hover:bg-accent/40"
-              >
-                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="break-words font-medium">{order.client?.name ?? 'Cliente'}</p>
-                    <p className="break-words text-sm text-muted-foreground">{order.description || 'Pedido'}</p>
-                    {order.eventDate ? (
-                      <p className="text-sm">
-                        <DateDisplay value={order.eventDate} mode="event" time={order.eventTime} />
-                      </p>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">Sin fecha</p>
-                    )}
-                  </div>
-                  <div className="flex min-w-0 flex-wrap gap-2">
-                    <OrderStatusBadge status={order.status} />
-                    <FulfillmentBadge type={order.fulfillmentType} />
-                    <PaymentStatusBadge status={order.paymentStatus} />
-                  </div>
-                </div>
-                <div className="mt-2 min-w-0 space-y-0.5 text-sm">
-                  <p className="min-w-0">
-                    Total <MoneyDisplay amount={order.totalAmount} />
-                  </p>
-                  <p className="min-w-0">
-                    Resta <MoneyDisplay amount={order.remainingBalance} emphasize={order.remainingBalance > 0} />
-                  </p>
-                </div>
-              </Link>
+              <li key={order.id} className="min-w-0">
+                <OrderListCard order={order} />
+              </li>
             ))}
-          </div>
+          </ul>
           <PaginationControls meta={orders.data.meta} onPageChange={(next) => update({ page: String(next) })} />
         </>
       ) : null}
     </div>
   );
+}
+
+function OrderListCard({ order }: { order: Order }) {
+  const hasBalance = order.remainingBalance > 0;
+
+  return (
+    <Link
+      to={`/orders/${order.id}`}
+      className="block min-w-0 rounded-xl border bg-card p-4 hover:bg-accent/40 active:bg-accent/60"
+    >
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="break-words font-medium leading-snug">{order.client?.name ?? 'Cliente'}</p>
+          <p className="mt-0.5 min-w-0 break-words text-sm text-muted-foreground">
+            {order.description || 'Pedido'}
+            <span aria-hidden="true"> · </span>
+            {order.eventDate ? (
+              <DateDisplay value={order.eventDate} mode="event" time={order.eventTime} />
+            ) : (
+              'Sin fecha'
+            )}
+          </p>
+        </div>
+        <div className="flex min-w-0 max-w-[46%] flex-col items-end gap-1.5 sm:max-w-[50%]">
+          {hasBalance ? (
+            <p className="flex min-w-0 flex-wrap items-baseline justify-end gap-x-1.5">
+              <span className="text-xs text-muted-foreground">Resta</span>
+              <MoneyDisplay amount={order.remainingBalance} emphasize />
+            </p>
+          ) : null}
+          <div className="flex min-w-0 flex-wrap justify-end gap-1.5">
+            <OrderStatusBadge status={order.status} />
+            <FulfillmentBadge type={order.fulfillmentType} />
+            <PaymentStatusBadge status={order.paymentStatus} />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Total <MoneyDisplay amount={order.totalAmount} />
+          </p>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function getActiveFilterLabels({
+  status,
+  paymentStatus,
+  fulfillmentType,
+  from,
+  to,
+}: {
+  status: string;
+  paymentStatus: string;
+  fulfillmentType: string;
+  from: string;
+  to: string;
+}) {
+  const labels: string[] = [];
+  if (status) {
+    labels.push(orderStatusLabels[status as OrderStatus] ?? status);
+  }
+  if (paymentStatus) {
+    labels.push(paymentStatusLabels[paymentStatus as PaymentStatus] ?? paymentStatus);
+  }
+  if (fulfillmentType) {
+    labels.push(fulfillmentLabels[fulfillmentType as FulfillmentType] ?? fulfillmentType);
+  }
+  if (from) {
+    labels.push(`Desde ${formatEventDateShort(from)}`);
+  }
+  if (to) {
+    labels.push(`Hasta ${formatEventDateShort(to)}`);
+  }
+  return labels;
 }
 
 function FieldSelect({

@@ -12,10 +12,8 @@ export function ClientNotes({ client }: { client: Client }) {
   const dirty = notes !== (client.notes ?? '');
 
   return (
-    <section className="min-w-0 rounded-xl border bg-card p-4 sm:p-5">
-      <h2 className="text-lg font-semibold">Notas del cliente</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Preferencias, alergias u otros datos que no cambian con cada chat.</p>
-      <Textarea className="mt-3" value={notes} onChange={(event) => setNotes(event.target.value)} />
+    <div className="min-w-0">
+      <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} />
       <div className="mt-3 flex justify-end">
         <Button
           className="w-full sm:w-auto"
@@ -32,6 +30,6 @@ export function ClientNotes({ client }: { client: Client }) {
           {update.isPending ? 'Guardando…' : 'Guardar notas'}
         </Button>
       </div>
-    </section>
+    </div>
   );
 }

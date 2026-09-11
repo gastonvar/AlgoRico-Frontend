@@ -1,19 +1,16 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
+import { ClientDetailBody } from '@/app/components/client-detail-body';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { ErrorState } from '@/components/common/error-state';
 import { LoadingSkeleton } from '@/components/common/loading-skeleton';
-import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/common/page-header';
 import { ClientFormDialog } from '@/features/clients/components/client-form-dialog';
 import { ClientHeader } from '@/features/clients/components/client-header';
-import { ClientNotes } from '@/features/clients/components/client-notes';
 import { useClient, useUpdateClient } from '@/features/clients/hooks/use-clients';
 import type { ClientFormValues } from '@/features/clients/schemas/client-schemas';
-import { ClientTimeline } from '@/features/interactions/components/client-timeline';
 import { InteractionFormDialog } from '@/features/interactions/components/interaction-form-dialog';
-import { ClientOrders } from '@/features/orders/components/client-orders';
 import { TaskFormDialog } from '@/features/tasks/components/task-form-dialog';
-import { TaskListSection } from '@/features/tasks/components/task-list-section';
 import { getErrorMessage } from '@/lib/api-error';
 import { ApiError } from '@/lib/api-error';
 import { toast } from 'sonner';
@@ -61,35 +58,32 @@ export function ClientDetailPage() {
   }
 
   return (
-    <div className="min-w-0 space-y-4 sm:space-y-6">
-      <ClientHeader
-        client={client}
-        onEdit={() => setEditOpen(true)}
-        onNewInteraction={() => setInteractionOpen(true)}
-        onNewOrder={() => navigate(`/orders/new?clientId=${client.id}`)}
-        onNewTask={() => setTaskOpen(true)}
-        onArchive={() => setArchiveOpen(true)}
-        onRestore={async () => {
-          try {
-            await update.mutateAsync({ archived: false });
-            toast.success('Cliente restaurado.');
-          } catch (error) {
-            toast.error(getErrorMessage(error));
-          }
-        }}
-      />
-      <ClientTimeline clientId={client.id} onCreate={() => setInteractionOpen(true)} />
-      <ClientOrders clientId={client.id} onCreate={() => navigate(`/orders/new?clientId=${client.id}`)} />
-      <section className="min-w-0 rounded-xl border bg-card p-4 sm:p-5">
-        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-semibold">Tareas</h2>
-          <Button className="w-full sm:w-auto" variant="outline" onClick={() => setTaskOpen(true)}>
-            Nueva tarea
-          </Button>
-        </div>
-        <TaskListSection clientId={client.id} onCreate={() => setTaskOpen(true)} />
-      </section>
-      <ClientNotes client={client} />
+    <div className="min-w-0">
+      <PageHeader title="Cliente" backTo={{ to: '/clients', label: 'Clientes' }} />
+      <div className="space-y-4 sm:space-y-6">
+        <ClientHeader
+          client={client}
+          onEdit={() => setEditOpen(true)}
+          onNewInteraction={() => setInteractionOpen(true)}
+          onNewOrder={() => navigate(`/orders/new?clientId=${client.id}`)}
+          onNewTask={() => setTaskOpen(true)}
+          onArchive={() => setArchiveOpen(true)}
+          onRestore={async () => {
+            try {
+              await update.mutateAsync({ archived: false });
+              toast.success('Cliente restaurado.');
+            } catch (error) {
+              toast.error(getErrorMessage(error));
+            }
+          }}
+        />
+        <ClientDetailBody
+          client={client}
+          onNewInteraction={() => setInteractionOpen(true)}
+          onNewOrder={() => navigate(`/orders/new?clientId=${client.id}`)}
+          onNewTask={() => setTaskOpen(true)}
+        />
+      </div>
       <ClientFormDialog
         open={editOpen}
         onOpenChange={setEditOpen}

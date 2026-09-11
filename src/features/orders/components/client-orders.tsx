@@ -42,12 +42,20 @@ function OrderRow({ order }: { order: Order }) {
   );
 }
 
-export function ClientOrders({ clientId, onCreate }: { clientId: string; onCreate: () => void }) {
+export function ClientOrders({
+  clientId,
+  onCreate,
+  showTitle = true,
+}: {
+  clientId: string;
+  onCreate: () => void;
+  showTitle?: boolean;
+}) {
   const orders = useOrders({ clientId, pageSize: 50 });
 
   return (
     <section className="min-w-0">
-      <h2 className="mb-2 text-lg font-semibold sm:mb-3">Pedidos</h2>
+      {showTitle ? <h2 className="mb-2 text-lg font-semibold sm:mb-3">Pedidos</h2> : null}
       {orders.isLoading ? <LoadingSkeleton rows={2} /> : null}
       {orders.error ? <ErrorState error={orders.error} onRetry={() => void orders.refetch()} /> : null}
       {orders.data && orders.data.data.length === 0 ? (

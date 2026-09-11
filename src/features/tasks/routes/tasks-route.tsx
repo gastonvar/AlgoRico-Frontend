@@ -6,6 +6,7 @@ import { ErrorState } from '@/components/common/error-state';
 import { ItemActions } from '@/components/common/item-actions';
 import { LoadingSkeleton } from '@/components/common/loading-skeleton';
 import { PageHeader } from '@/components/common/page-header';
+import { PageSection } from '@/components/common/page-section';
 import { TaskPriorityBadge } from '@/components/common/status-badges';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -54,6 +55,12 @@ export function TasksRoute() {
     }
     setParams(nextParams);
   }
+
+  const groupHandlers = {
+    onComplete: complete.mutateAsync,
+    onEdit: setEditingTask,
+    onDelete: setPendingDelete,
+  };
 
   return (
     <div>
@@ -104,38 +111,19 @@ export function TasksRoute() {
         />
       ) : null}
       {tasks.data && tasks.data.data.length > 0 && !due ? (
-        <div className="space-y-6">
-          <TaskGroup
-            title="Vencidas"
-            tasks={grouped.overdue}
-            onComplete={complete.mutateAsync}
-            onEdit={setEditingTask}
-            onDelete={setPendingDelete}
-          />
-          <TaskGroup title="Hoy" tasks={grouped.today} onComplete={complete.mutateAsync} onEdit={setEditingTask} onDelete={setPendingDelete} />
-          <TaskGroup
-            title="Próximas"
-            tasks={grouped.upcoming}
-            onComplete={complete.mutateAsync}
-            onEdit={setEditingTask}
-            onDelete={setPendingDelete}
-          />
-          <TaskGroup
-            title="Completadas"
-            tasks={grouped.completed}
-            onComplete={complete.mutateAsync}
-            onEdit={setEditingTask}
-            onDelete={setPendingDelete}
-          />
+        <div className="space-y-4 sm:space-y-5">
+          <TaskGroup title="Vencidas" tasks={grouped.overdue} emphasize {...groupHandlers} />
+          <TaskGroup title="Hoy" tasks={grouped.today} {...groupHandlers} />
+          <TaskGroup title="Próximas" tasks={grouped.upcoming} {...groupHandlers} />
+          <TaskGroup title="Completadas" tasks={grouped.completed} {...groupHandlers} />
         </div>
       ) : null}
       {tasks.data && due ? (
         <TaskGroup
           title={due === 'overdue' ? 'Vencidas' : due === 'today' ? 'Hoy' : 'Próximas'}
           tasks={tasks.data.data}
-          onComplete={complete.mutateAsync}
-          onEdit={setEditingTask}
-          onDelete={setPendingDelete}
+          emphasize={due === 'overdue'}
+          {...groupHandlers}
         />
       ) : null}
       {tasks.data ? <PaginationControlsFallback meta={tasks.data.meta} onPageChange={(next) => update({ page: String(next) })} /> : null}
@@ -213,69 +201,83 @@ function isTodayTask(task: Task) {
 function TaskGroup({
   title,
   tasks,
+  emphasize,
   onComplete,
   onEdit,
   onDelete,
 }: {
   title: string;
   tasks: Task[];
+  emphasize?: boolean;
   onComplete: (input: { taskId: string; completed: boolean }) => Promise<unknown>;
   onEdit: (task: Task) => void;
   onDelete: (id: string) => void;
 }) {
   if (tasks.length === 0) return null;
   return (
-    <section>
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">{title}</h2>
-      <ul className="space-y-2">
+    <PageSection
+      title={title}
+      description={`${tasks.length} ${tasks.length === 1 ? 'tarea' : 'tareas'}`}
+      className={emphasize ? 'border-warning/40' : undefined}
+    >
+      <ul className="divide-y">
         {tasks.map((task) => (
-          <li key={task.id} className={`rounded-xl border p-4 ${task.completed ? 'opacity-60' : 'bg-card'}`}>
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className={`font-medium ${task.completed ? 'line-through' : ''}`}>{task.title}</p>
-                {task.dueAt ? (
-                  <p className="text-sm text-muted-foreground">
-                    <DateDisplay value={task.dueAt} mode="relative" />
-                  </p>
-                ) : null}
-                <div className="mt-1 flex flex-wrap gap-2">
-                  <TaskPriorityBadge priority={task.priority} />
-                  {task.clientId ? (
-                    <Link className="text-sm text-primary" to={`/clients/${task.clientId}`}>
-                      {task.clientName ?? 'Cliente'}
-                    </Link>
-                  ) : null}
-                  {task.orderId ? (
-                    <Link className="text-sm text-primary" to={`/orders/${task.orderId}`}>
-                      Pedido
-                    </Link>
-                  ) : null}
-                </div>
-              </div>
-              <ItemActions
-                editLabel="Editar tarea"
-                deleteLabel="Eliminar tarea"
-                onEdit={() => onEdit(task)}
-                onDelete={() => onDelete(task.id)}
-              />
-            </div>
-            <Button
-              variant="outline"
-              className="mt-3 w-full sm:w-auto"
-              onClick={async () => {
-                try {
-                  await onComplete({ taskId: task.id, completed: !task.completed });
-                  toast.success(task.completed ? 'Tarea reabierta.' : 'Tarea completada.');
-                } catch (error) {
-                  toast.error(getErrorMessage(error));
-                }
-              }}
-            >
-              {task.completed ? 'Reabrir' : 'Completar'}
-            </Button>
-          </li>
+          <TaskRow key={task.id} task={task} onComplete={onComplete} onEdit={onEdit} onDelete={onDelete} />
         ))}
       </ul>
-    </section>
+    </PageSection>
+  );
+}
+
+function TaskRow({
+  task,
+  onComplete,
+  onEdit,
+  onDelete,
+}: {
+  task: Task;
+  onComplete: (input: { taskId: string; completed: boolean }) => Promise<unknown>;
+  onEdit: (task: Task) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <li className={`py-4 first:pt-0 last:pb-0 ${task.completed ? 'opacity-60' : ''}`}>
+      <p className={`text-base font-semibold ${task.completed ? 'line-through' : ''}`}>{task.title}</p>
+      {task.dueAt ? (
+        <p className="mt-1 text-sm text-muted-foreground">
+          <DateDisplay value={task.dueAt} mode="relative" />
+        </p>
+      ) : null}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <TaskPriorityBadge priority={task.priority} />
+        {task.clientId ? (
+          <Link className="text-sm text-primary" to={`/clients/${task.clientId}`}>
+            {task.clientName ?? 'Cliente'}
+          </Link>
+        ) : null}
+        {task.orderId ? (
+          <Link className="text-sm text-primary" to={`/orders/${task.orderId}`}>
+            Pedido
+          </Link>
+        ) : null}
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Button
+          variant="outline"
+          className="w-full sm:w-auto"
+          onClick={async () => {
+            try {
+              await onComplete({ taskId: task.id, completed: !task.completed });
+              toast.success(task.completed ? 'Tarea reabierta.' : 'Tarea completada.');
+            } catch (error) {
+              toast.error(getErrorMessage(error));
+            }
+          }}
+        >
+          {task.completed ? 'Reabrir' : 'Completar'}
+        </Button>
+        <ItemActions editLabel="Editar" deleteLabel="Eliminar" onEdit={() => onEdit(task)} onDelete={() => onDelete(task.id)} />
+      </div>
+    </li>
   );
 }

@@ -63,7 +63,7 @@ export function ClientsRoute() {
   }
 
   return (
-    <div>
+    <div className="min-w-0">
       <PageHeader
         title="Clientes"
         description="Buscá por nombre, teléfono o Instagram."
@@ -74,9 +74,8 @@ export function ClientsRoute() {
           </Button>
         }
       />
-      <div className="mb-4">
+      <div className="mb-4 sm:max-w-md">
         <SearchInput
-          className="h-12"
           placeholder="Buscar clientes..."
           value={search}
           onChange={(event) => updateParams({ q: event.target.value, page: '1' })}
