@@ -2,12 +2,15 @@ import { http, HttpResponse } from 'msw';
 import {
   addAttachment,
   addClient,
+  addIngredient,
   addInteraction,
   addOrder,
   addPayment,
   addPaymentAttachment,
+  addRecipe,
   addTask,
   buildDashboard,
+  buildRecipeIngredients,
   calendarEvents,
   findAttachment,
   getDb,
@@ -15,7 +18,7 @@ import {
   refreshOrderFinance,
   setAuthenticated,
 } from '@/testing/msw/db';
-import type { Interaction } from '@/types/domain';
+import type { Ingredient, Interaction, Recipe } from '@/types/domain';
 
 const API = 'http://localhost:3000';
 
@@ -160,20 +163,27 @@ export const handlers = [
       fulfillmentType?: 'DELIVERY' | 'PICKUP';
       deliveryAddress?: string;
       deliveryTime?: string;
-      items?: Array<{ description: string; quantity: number; unitPrice: number; notes?: string }>;
+      items?: Array<{ recipeId?: string; description?: string; quantity: number; unitPrice?: number; notes?: string }>;
       totalAmount?: number;
     };
-    const items = (body.items ?? []).map((item, index) => ({
-      id: `item-${index + 1}`,
-      orderId: 'pending',
-      description: item.description,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      lineTotal: item.quantity * item.unitPrice,
-      notes: item.notes ?? null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }));
+    const items = (body.items ?? []).map((item, index) => {
+      const recipe = item.recipeId ? getDb().recipes.find((entry) => entry.id === item.recipeId) : undefined;
+      const unitPrice = item.unitPrice ?? recipe?.price ?? 0;
+      const description = item.description ?? recipe?.name ?? '';
+      return {
+        id: `item-${index + 1}`,
+        orderId: 'pending',
+        recipeId: item.recipeId ?? null,
+        recipe: recipe ? { id: recipe.id, name: recipe.name } : null,
+        description,
+        quantity: item.quantity,
+        unitPrice,
+        lineTotal: item.quantity * unitPrice,
+        notes: item.notes ?? null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    });
     const order = addOrder(String(params.clientId), {
       ...body,
       items: items.map((item) => ({ ...item, orderId: 'pending' })),
@@ -213,22 +223,36 @@ export const handlers = [
       return HttpResponse.json({ error: { code: 'NOT_FOUND', message: 'Order not found' } }, { status: 404 });
     }
     const body = (await request.json()) as Partial<typeof order> & {
-      items?: Array<{ id?: string; description: string; quantity: number; unitPrice: number; notes?: string }>;
+      items?: Array<{
+        id?: string;
+        recipeId?: string;
+        description?: string;
+        quantity: number;
+        unitPrice?: number;
+        notes?: string;
+      }>;
     };
     const { items, ...fields } = body;
     Object.assign(order, fields);
     if (items) {
-      order.items = items.map((item, index) => ({
-        id: item.id ?? `item-${order.id}-${index + 1}`,
-        orderId: order.id,
-        description: item.description,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        lineTotal: item.quantity * item.unitPrice,
-        notes: item.notes ?? null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }));
+      order.items = items.map((item, index) => {
+        const recipe = item.recipeId ? getDb().recipes.find((entry) => entry.id === item.recipeId) : undefined;
+        const unitPrice = item.unitPrice ?? recipe?.price ?? 0;
+        const description = item.description ?? recipe?.name ?? '';
+        return {
+          id: item.id ?? `item-${order.id}-${index + 1}`,
+          orderId: order.id,
+          recipeId: item.recipeId ?? null,
+          recipe: recipe ? { id: recipe.id, name: recipe.name } : null,
+          description,
+          quantity: item.quantity,
+          unitPrice,
+          lineTotal: item.quantity * unitPrice,
+          notes: item.notes ?? null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+      });
     }
     refreshOrderFinance(order);
     return json(order);
@@ -329,5 +353,111 @@ export const handlers = [
   http.get(`${API}/api/calendar`, ({ request }) => {
     const url = new URL(request.url);
     return json(calendarEvents(url.searchParams.get('from') ?? '', url.searchParams.get('to') ?? ''));
+  }),
+
+  http.get(`${API}/api/ingredients`, ({ request }) => {
+    const url = new URL(request.url);
+    const q = (url.searchParams.get('q') ?? '').toLowerCase();
+    const page = Number(url.searchParams.get('page') ?? '1');
+    const pageSize = Number(url.searchParams.get('pageSize') ?? '20');
+    const filtered = getDb().ingredients.filter((ingredient) => {
+      if (!q) return true;
+      return ingredient.name.toLowerCase().includes(q);
+    });
+    return HttpResponse.json(paginate(filtered, page, pageSize));
+  }),
+  http.post(`${API}/api/ingredients`, async ({ request }) => {
+    const body = (await request.json()) as {
+      name: string;
+      unit: Ingredient['unit'];
+      pricePerUnit: number;
+      notes?: string;
+    };
+    return json(addIngredient(body), 201);
+  }),
+  http.get(`${API}/api/ingredients/:ingredientId`, ({ params }) => {
+    const ingredient = getDb().ingredients.find((item) => item.id === params.ingredientId);
+    if (!ingredient) {
+      return HttpResponse.json({ error: { code: 'NOT_FOUND', message: 'Ingredient not found' } }, { status: 404 });
+    }
+    return json(ingredient);
+  }),
+  http.patch(`${API}/api/ingredients/:ingredientId`, async ({ params, request }) => {
+    const ingredient = getDb().ingredients.find((item) => item.id === params.ingredientId);
+    if (!ingredient) {
+      return HttpResponse.json({ error: { code: 'NOT_FOUND', message: 'Ingredient not found' } }, { status: 404 });
+    }
+    Object.assign(ingredient, await request.json());
+    return json(ingredient);
+  }),
+  http.delete(`${API}/api/ingredients/:ingredientId`, ({ params }) => {
+    const db = getDb();
+    const used = db.recipes.some((recipe) => recipe.ingredients.some((line) => line.ingredientId === params.ingredientId));
+    if (used) {
+      return HttpResponse.json({ error: { code: 'CONFLICT', message: 'Ingredient is used in recipes' } }, { status: 409 });
+    }
+    db.ingredients = db.ingredients.filter((item) => item.id !== params.ingredientId);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.get(`${API}/api/recipes`, ({ request }) => {
+    const url = new URL(request.url);
+    const q = (url.searchParams.get('q') ?? '').toLowerCase();
+    const page = Number(url.searchParams.get('page') ?? '1');
+    const pageSize = Number(url.searchParams.get('pageSize') ?? '20');
+    const filtered = getDb().recipes.filter((recipe) => {
+      if (!q) return true;
+      return recipe.name.toLowerCase().includes(q);
+    });
+    return HttpResponse.json(paginate(filtered, page, pageSize));
+  }),
+  http.post(`${API}/api/recipes`, async ({ request }) => {
+    const body = (await request.json()) as {
+      name: string;
+      description?: string;
+      notes?: string;
+      ingredients: Array<{ ingredientId: string; quantity: number; notes?: string }>;
+    };
+    const recipe = addRecipe({
+      name: body.name,
+      description: body.description,
+      notes: body.notes,
+      ingredients: [],
+    });
+    recipe.ingredients = buildRecipeIngredients(recipe.id, body.ingredients);
+    recipe.price = recipe.ingredients.reduce((sum, line) => sum + line.lineCost, 0);
+    return json(recipe, 201);
+  }),
+  http.get(`${API}/api/recipes/:recipeId`, ({ params }) => {
+    const recipe = getDb().recipes.find((item) => item.id === params.recipeId);
+    if (!recipe) {
+      return HttpResponse.json({ error: { code: 'NOT_FOUND', message: 'Recipe not found' } }, { status: 404 });
+    }
+    return json(recipe);
+  }),
+  http.patch(`${API}/api/recipes/:recipeId`, async ({ params, request }) => {
+    const recipe = getDb().recipes.find((item) => item.id === params.recipeId);
+    if (!recipe) {
+      return HttpResponse.json({ error: { code: 'NOT_FOUND', message: 'Recipe not found' } }, { status: 404 });
+    }
+    const body = (await request.json()) as Partial<Recipe> & {
+      ingredients?: Array<{ ingredientId: string; quantity: number; notes?: string }>;
+    };
+    const { ingredients, ...fields } = body;
+    Object.assign(recipe, fields);
+    if (ingredients) {
+      recipe.ingredients = buildRecipeIngredients(recipe.id, ingredients);
+      recipe.price = recipe.ingredients.reduce((sum, line) => sum + line.lineCost, 0);
+    }
+    return json(recipe);
+  }),
+  http.delete(`${API}/api/recipes/:recipeId`, ({ params }) => {
+    const db = getDb();
+    const used = db.orders.some((order) => order.items.some((item) => item.recipeId === params.recipeId));
+    if (used) {
+      return HttpResponse.json({ error: { code: 'CONFLICT', message: 'Recipe is used in orders' } }, { status: 409 });
+    }
+    db.recipes = db.recipes.filter((item) => item.id !== params.recipeId);
+    return new HttpResponse(null, { status: 204 });
   }),
 ];

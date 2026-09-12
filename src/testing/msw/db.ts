@@ -4,8 +4,11 @@ import type {
   Client,
   ClientDetail,
   Dashboard,
+  Ingredient,
   Interaction,
   Order,
+  OrderItem,
+  Recipe,
   Task,
   User,
 } from '@/types/domain';
@@ -17,6 +20,8 @@ type Db = {
   interactions: Interaction[];
   orders: Order[];
   tasks: Task[];
+  ingredients: Ingredient[];
+  recipes: Recipe[];
 };
 
 const isoNow = () => new Date().toISOString();
@@ -37,6 +42,8 @@ function createDb(): Db {
     interactions: [],
     orders: [],
     tasks: [],
+    ingredients: [],
+    recipes: [],
   };
 }
 
@@ -238,9 +245,26 @@ export function findAttachment(attachmentId: string): Attachment | undefined {
     .find((item) => item.id === attachmentId);
 }
 
-export function addOrder(clientId: string, input: Partial<Order>): Order {
+export function addOrder(
+  clientId: string,
+  input: Omit<Partial<Order>, 'items'> & {
+    items?: Array<Partial<OrderItem> & Pick<OrderItem, 'description' | 'quantity' | 'unitPrice' | 'lineTotal'>>;
+  },
+): Order {
   const client = db.clients.find((item) => item.id === clientId) ?? null;
-  const items = input.items ?? [];
+  const items: OrderItem[] = (input.items ?? []).map((item, index) => ({
+    id: item.id ?? `item-${index + 1}`,
+    orderId: item.orderId ?? 'pending',
+    recipeId: item.recipeId ?? null,
+    recipe: item.recipe ?? null,
+    description: item.description,
+    quantity: item.quantity,
+    unitPrice: item.unitPrice,
+    lineTotal: item.lineTotal,
+    notes: item.notes ?? null,
+    createdAt: item.createdAt ?? isoNow(),
+    updatedAt: item.updatedAt ?? isoNow(),
+  }));
   const itemsTotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
   const totalAmount = input.totalAmount ?? itemsTotal;
   const order: Order = {
@@ -329,4 +353,63 @@ export function addTask(input: Partial<Task> & { title: string }): Task {
   };
   db.tasks.push(task);
   return task;
+}
+
+export function addIngredient(input: Partial<Ingredient> & { name: string }): Ingredient {
+  const ingredient: Ingredient = {
+    id: `ingredient-${db.ingredients.length + 1}`,
+    name: input.name,
+    unit: input.unit ?? 'kg',
+    pricePerUnit: input.pricePerUnit ?? 0,
+    notes: input.notes ?? null,
+    createdAt: isoNow(),
+    updatedAt: isoNow(),
+  };
+  db.ingredients.push(ingredient);
+  return ingredient;
+}
+
+function recipePrice(recipe: Pick<Recipe, 'ingredients'>): number {
+  return recipe.ingredients.reduce((sum, line) => sum + line.lineCost, 0);
+}
+
+export function addRecipe(
+  input: Partial<Recipe> & { name: string; ingredients?: Recipe['ingredients'] },
+): Recipe {
+  const ingredients = input.ingredients ?? [];
+  const recipe: Recipe = {
+    id: `recipe-${db.recipes.length + 1}`,
+    name: input.name,
+    description: input.description ?? null,
+    notes: input.notes ?? null,
+    ingredients,
+    price: input.price ?? recipePrice({ ingredients }),
+    createdAt: isoNow(),
+    updatedAt: isoNow(),
+  };
+  recipe.ingredients = recipe.ingredients.map((line) => ({ ...line, recipeId: recipe.id }));
+  db.recipes.push(recipe);
+  return recipe;
+}
+
+export function buildRecipeIngredients(
+  recipeId: string,
+  lines: Array<{ ingredientId: string; quantity: number; notes?: string }>,
+): Recipe['ingredients'] {
+  return lines.map((line, index) => {
+    const ingredient = db.ingredients.find((item) => item.id === line.ingredientId) ?? null;
+    const quantity = line.quantity;
+    const lineCost = ingredient ? quantity * ingredient.pricePerUnit : 0;
+    return {
+      id: `recipe-line-${recipeId}-${index + 1}`,
+      recipeId,
+      ingredientId: line.ingredientId,
+      ingredient,
+      quantity,
+      lineCost,
+      notes: line.notes ?? null,
+      createdAt: isoNow(),
+      updatedAt: isoNow(),
+    };
+  });
 }

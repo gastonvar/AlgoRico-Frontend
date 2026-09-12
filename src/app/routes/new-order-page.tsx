@@ -5,6 +5,7 @@ import { useClients } from '@/features/clients/hooks/use-clients';
 import { OrderForm } from '@/features/orders/components/order-form';
 import { useCreateOrder } from '@/features/orders/hooks/use-orders';
 import type { OrderFormValues } from '@/features/orders/schemas/order-schemas';
+import { useRecipes } from '@/features/recipes/hooks/use-recipes';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { applyFieldErrors } from '@/lib/form-errors';
 import { getErrorMessage } from '@/lib/api-error';
@@ -17,9 +18,11 @@ export function NewOrderPage() {
   const [clientQuery, setClientQuery] = useState('');
   const debounced = useDebouncedValue(clientQuery, 300);
   const clients = useClients({ q: debounced, pageSize: 10 });
+  const recipes = useRecipes({ pageSize: 100 });
   const create = useCreateOrder();
 
   const clientOptions = useMemo(() => clients.data?.data ?? [], [clients.data]);
+  const recipeOptions = useMemo(() => recipes.data?.data ?? [], [recipes.data]);
 
   async function handleSubmit(values: OrderFormValues) {
     try {
@@ -36,6 +39,7 @@ export function NewOrderPage() {
           notes: values.notes || undefined,
           totalAmount: Number(values.totalAmount),
           items: values.items.map((item) => ({
+            recipeId: item.recipeId,
             description: item.description,
             quantity: Number(item.quantity),
             unitPrice: Number(item.unitPrice) || 0,
@@ -62,9 +66,11 @@ export function NewOrderPage() {
         clientQuery={clientQuery}
         onClientQueryChange={setClientQuery}
         clients={clientOptions}
+        recipes={recipeOptions}
         onSubmit={handleSubmit}
         pending={create.isPending}
       />
     </div>
   );
 }
+

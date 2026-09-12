@@ -7,18 +7,18 @@ type OrderDetailProductsProps = {
 };
 
 export function OrderDetailProducts({ items }: OrderDetailProductsProps) {
-  const countLabel = items.length === 1 ? '1 producto' : `${items.length} productos`;
+  const countLabel = items.length === 1 ? '1 receta' : `${items.length} recetas`;
 
   return (
-    <PageSection id="productos" title="Productos" description={countLabel}>
+    <PageSection id="productos" title="Recetas" description={countLabel}>
       {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Este pedido no tiene productos.</p>
+        <p className="text-sm text-muted-foreground">Este pedido no tiene recetas.</p>
       ) : (
         <ul className="-mt-1 divide-y">
           {items.map((item) => (
             <li key={item.id} className="flex items-start justify-between gap-3 py-3 first:pt-0 last:pb-0">
               <div className="min-w-0 flex-1">
-                <p className="break-words font-medium">{item.description}</p>
+                <p className="break-words font-medium">{item.recipe?.name ?? item.description}</p>
                 <p className="text-sm text-muted-foreground">
                   {item.quantity} {item.quantity === 1 ? 'unidad' : 'unidades'}
                   {item.unitPrice > 0 ? (

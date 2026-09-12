@@ -13,7 +13,7 @@ import { ItemActions } from '@/components/common/item-actions';
 import { SearchInput } from '@/components/common/search-input';
 import { orderFormSchema, type OrderFormValues } from '@/features/orders/schemas/order-schemas';
 import { suggestedOrderTotal } from '@/features/orders/utils/suggested-order-total';
-import type { Client } from '@/types/domain';
+import type { Client, Recipe } from '@/types/domain';
 import { FULFILLMENT_TYPES, ORDER_STATUSES } from '@/types/domain';
 import { formatMoney } from '@/utils/money';
 import { fulfillmentLabels, orderStatusLabels } from '@/utils/labels';
@@ -24,6 +24,7 @@ type OrderFormProps = {
   clientQuery?: string;
   onClientQueryChange?: (value: string) => void;
   clients?: Client[];
+  recipes?: Pick<Recipe, 'id' | 'name' | 'price'>[];
   onSubmit: (values: OrderFormValues) => Promise<void>;
   pending?: boolean;
   lockClient?: boolean;
@@ -32,13 +33,16 @@ type OrderFormProps = {
   submitLabel?: string;
 };
 
-const emptyItem = { itemId: undefined, description: '', quantity: 1, unitPrice: 0, notes: '' };
+function createEmptyItem(): OrderFormValues['items'][number] {
+  return { itemId: undefined, recipeId: '', description: '', quantity: 1, unitPrice: 0, notes: '' };
+}
 
 export function OrderForm({
   defaultClientId,
   clientQuery = '',
   onClientQueryChange,
   clients = [],
+  recipes = [],
   onSubmit,
   pending,
   lockClient = false,
@@ -60,7 +64,7 @@ export function OrderForm({
       notes: '',
       description: '',
       totalAmount: 0,
-      items: [emptyItem],
+      items: [createEmptyItem()],
       ...initialValues,
     },
   });
@@ -70,6 +74,14 @@ export function OrderForm({
   const eventDate = form.watch('eventDate');
   const watchedItems = form.watch('items');
   const itemsTotal = suggestedOrderTotal(watchedItems);
+  const recipeById = new Map(recipes.map((recipe) => [recipe.id, recipe]));
+
+  function applyRecipe(index: number, recipeId: string) {
+    const recipe = recipeById.get(recipeId);
+    form.setValue(`items.${index}.recipeId`, recipeId, { shouldValidate: true });
+    form.setValue(`items.${index}.description`, recipe?.name ?? '');
+    form.setValue(`items.${index}.unitPrice`, recipe?.price ?? 0);
+  }
 
   useEffect(() => {
     if (!totalManuallyEdited) {
@@ -150,23 +162,36 @@ export function OrderForm({
       <section className="space-y-4 rounded-xl border bg-card p-4 lg:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="text-base font-semibold lg:text-lg">Productos</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Qué hay que hacer y el precio.</p>
+            <h2 className="text-base font-semibold lg:text-lg">Recetas</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Un pedido puede tener varias recetas. Cada línea es una receta y cuántas van.
+            </p>
           </div>
-          <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => items.append(emptyItem)}>
-            Agregar producto
+          <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => items.append(createEmptyItem())}>
+            Agregar receta
           </Button>
         </div>
         {items.fields.map((field, index) => (
           <div key={field.id} className="space-y-3 rounded-lg border p-3">
             <div className="flex items-start justify-between gap-2">
               <Field className="min-w-0 flex-1">
-                <Label htmlFor={`item-product-${index}`}>Producto</Label>
-                <Input id={`item-product-${index}`} placeholder="Torta, tarta, cookies…" {...form.register(`items.${index}.description`)} />
-                <FieldError>{form.formState.errors.items?.[index]?.description?.message}</FieldError>
+                <Label htmlFor={`item-recipe-${index}`}>Receta {index + 1}</Label>
+                <NativeSelect
+                  id={`item-recipe-${index}`}
+                  value={form.watch(`items.${index}.recipeId`)}
+                  onChange={(event) => applyRecipe(index, event.target.value)}
+                >
+                  <option value="">Elegí una receta</option>
+                  {recipes.map((recipe) => (
+                    <option key={recipe.id} value={recipe.id}>
+                      {recipe.name}
+                    </option>
+                  ))}
+                </NativeSelect>
+                <FieldError>{form.formState.errors.items?.[index]?.recipeId?.message}</FieldError>
               </Field>
               {items.fields.length > 1 ? (
-                <ItemActions deleteLabel="Quitar producto" onDelete={() => items.remove(index)} />
+                <ItemActions deleteLabel="Quitar receta" onDelete={() => items.remove(index)} />
               ) : null}
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -176,7 +201,7 @@ export function OrderForm({
                 <FieldError>{form.formState.errors.items?.[index]?.quantity?.message}</FieldError>
               </Field>
               <Field>
-                <Label htmlFor={`item-price-${index}`}>Precio unitario</Label>
+                <Label htmlFor={`item-price-${index}`}>Precio de la receta</Label>
                 <Input
                   id={`item-price-${index}`}
                   type="number"
@@ -204,7 +229,7 @@ export function OrderForm({
             })}
           />
           <p className="text-sm text-muted-foreground">
-            Arranca como cantidad × precio ({formatMoney(itemsTotal)}). Lo podés editar.
+            Arranca como receta × cantidad ({formatMoney(itemsTotal)}). Lo podés editar.
           </p>
           <FieldError>{form.formState.errors.totalAmount?.message}</FieldError>
         </Field>

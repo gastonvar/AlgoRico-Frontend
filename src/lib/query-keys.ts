@@ -32,4 +32,14 @@ export const queryKeys = {
     all: ['calendar'] as const,
     range: (from: string, to: string) => ['calendar', from, to] as const,
   },
+  ingredients: {
+    all: ['ingredients'] as const,
+    list: (filters: unknown) => ['ingredients', filters] as const,
+    detail: (ingredientId: string) => ['ingredient', ingredientId] as const,
+  },
+  recipes: {
+    all: ['recipes'] as const,
+    list: (filters: unknown) => ['recipes', filters] as const,
+    detail: (recipeId: string) => ['recipe', recipeId] as const,
+  },
 };

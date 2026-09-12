@@ -38,6 +38,9 @@ export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 export const TASK_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH'] as const;
 export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 
+export const INGREDIENT_UNITS = ['g', 'kg', 'ml', 'l', 'un'] as const;
+export type IngredientUnit = (typeof INGREDIENT_UNITS)[number];
+
 export const CSRF_COOKIE_NAME = 'algorico.csrf';
 export const CSRF_HEADER_NAME = 'x-csrf-token';
 
@@ -100,11 +103,46 @@ export type Interaction = {
 export type OrderItem = {
   id: string;
   orderId: string;
+  recipeId: string | null;
+  recipe: { id: string; name: string } | null;
   description: string;
   quantity: number;
   unitPrice: number;
   lineTotal: number;
   notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Ingredient = {
+  id: string;
+  name: string;
+  unit: IngredientUnit;
+  pricePerUnit: number;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type RecipeIngredient = {
+  id: string;
+  recipeId: string;
+  ingredientId: string;
+  ingredient: Ingredient | null;
+  quantity: number;
+  lineCost: number;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Recipe = {
+  id: string;
+  name: string;
+  description: string | null;
+  notes: string | null;
+  ingredients: RecipeIngredient[];
+  price: number;
   createdAt: string;
   updatedAt: string;
 };

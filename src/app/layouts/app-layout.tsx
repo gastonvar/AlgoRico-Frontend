@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronLeft, ClipboardList, LayoutDashboard, LogOut, Plus, ShoppingBag, Users } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ClipboardList, CookingPot, LayoutDashboard, LogOut, Plus, ShoppingBag, Users, Wheat } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,8 @@ const navItems = [
   { to: '/dashboard', label: 'Inicio', icon: LayoutDashboard, end: true },
   { to: '/clients', label: 'Clientes', icon: Users, end: false },
   { to: '/orders', label: 'Pedidos', icon: ShoppingBag, end: false },
+  { to: '/recipes', label: 'Recetas', icon: CookingPot, end: false },
+  { to: '/ingredients', label: 'Ingredientes', icon: Wheat, end: false },
   { to: '/calendar', label: 'Agenda', icon: CalendarDays, end: false },
   { to: '/tasks', label: 'Tareas', icon: ClipboardList, end: false },
 ];
@@ -25,6 +27,8 @@ const titles: Record<string, string> = {
   '/dashboard': 'Inicio',
   '/clients': 'Clientes',
   '/orders': 'Pedidos',
+  '/recipes': 'Recetas',
+  '/ingredients': 'Ingredientes',
   '/calendar': 'Agenda',
   '/tasks': 'Tareas',
 };
@@ -34,6 +38,9 @@ function pageTitle(pathname: string): string {
   if (pathname.startsWith('/orders/new')) return 'Nuevo pedido';
   if (pathname.match(/^\/orders\/[^/]+\/edit/)) return 'Editar pedido';
   if (pathname.startsWith('/orders/')) return 'Pedido';
+  if (pathname.startsWith('/recipes/new')) return 'Nueva receta';
+  if (pathname.match(/^\/recipes\/[^/]+\/edit/)) return 'Editar receta';
+  if (pathname.startsWith('/recipes/')) return 'Receta';
   return titles[pathname] ?? 'Algo Rico';
 }
 
@@ -44,6 +51,11 @@ function backTo(pathname: string): { to: string; label: string } | null {
   }
   if (pathname.match(/^\/orders\/[^/]+$/)) return { to: '/orders', label: 'Pedidos' };
   if (pathname.match(/^\/clients\/[^/]+$/)) return { to: '/clients', label: 'Clientes' };
+  if (pathname === '/recipes/new') return { to: '/recipes', label: 'Recetas' };
+  if (pathname.match(/^\/recipes\/[^/]+\/edit/)) {
+    return { to: pathname.replace(/\/edit$/, ''), label: 'Receta' };
+  }
+  if (pathname.match(/^\/recipes\/[^/]+$/)) return { to: '/recipes', label: 'Recetas' };
   return null;
 }
 
@@ -80,6 +92,8 @@ function QuickActions() {
       <DropdownMenuContent align="end">
         <DropdownMenuItem onSelect={() => navigate('/clients?new=1')}>Nuevo cliente</DropdownMenuItem>
         <DropdownMenuItem onSelect={() => navigate('/orders/new')}>Nuevo pedido</DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => navigate('/recipes/new')}>Nueva receta</DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => navigate('/ingredients?new=1')}>Nuevo ingrediente</DropdownMenuItem>
         <DropdownMenuItem onSelect={() => navigate('/tasks?new=1')}>Nueva tarea</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -134,9 +148,9 @@ function MobileTabBar() {
       aria-label="Secciones"
       className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] backdrop-blur lg:hidden"
     >
-      <ul className="grid grid-cols-5">
+      <ul className="flex overflow-x-auto">
         {navItems.map((item) => (
-          <li key={item.to}>
+          <li key={item.to} className="min-w-[4.5rem] flex-1">
             <NavLink
               to={item.to}
               end={item.end}

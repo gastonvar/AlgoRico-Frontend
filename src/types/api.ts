@@ -28,3 +28,11 @@ export type ListTasksParams = PaginationParams & {
 };
 
 export type ListInteractionsParams = PaginationParams;
+
+export type ListIngredientsParams = PaginationParams & {
+  q?: string;
+};
+
+export type ListRecipesParams = PaginationParams & {
+  q?: string;
+};

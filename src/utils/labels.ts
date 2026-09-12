@@ -1,5 +1,6 @@
 import type {
   FulfillmentType,
+  IngredientUnit,
   InteractionChannel,
   OrderStatus,
   PaymentMethod,
@@ -64,6 +65,14 @@ export const missingInfoLabels: Record<string, string> = {
   'Missing event time': 'Falta la hora del evento',
   'Missing delivery address': 'Falta la dirección de entrega',
   'Missing delivery time': 'Falta la hora de entrega',
+};
+
+export const ingredientUnitLabels: Record<IngredientUnit, string> = {
+  g: 'g',
+  kg: 'kg',
+  ml: 'ml',
+  l: 'l',
+  un: 'un.',
 };
 
 export function labelForMissingIssue(issue: string): string {

@@ -1,11 +1,23 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router';
+import { EditOrderPage } from '@/app/routes/edit-order-page';
 import { NewOrderPage } from '@/app/routes/new-order-page';
 import { OrderDetailPage } from '@/app/routes/order-detail-page';
-import { EditOrderPage } from '@/features/orders/routes/edit-order-page';
-import { addClient, addOrder } from '@/testing/msw/db';
+import { addClient, addIngredient, addOrder, addRecipe } from '@/testing/msw/db';
 import { authenticateTestUser, renderApp } from '@/testing/test-utils';
+
+function seedCakeRecipe() {
+  addIngredient({ name: 'Harina', unit: 'kg', pricePerUnit: 2500 });
+  return addRecipe({ name: 'Chocolate birthday cake', price: 2500 });
+}
+
+function seedCatalog() {
+  addIngredient({ name: 'Harina', unit: 'kg', pricePerUnit: 2500 });
+  const cake = addRecipe({ name: 'Torta de chocolate', price: 2500 });
+  const cupcakes = addRecipe({ name: 'Cupcakes de vainilla', price: 500 });
+  return { cake, cupcakes };
+}
 
 describe('orders and payments', () => {
   beforeEach(() => {
@@ -14,6 +26,7 @@ describe('orders and payments', () => {
 
   it('creates an order, records payments and shows backend balances', async () => {
     const client = addClient({ name: 'María Pérez' });
+    seedCakeRecipe();
     const user = userEvent.setup();
 
     renderApp(
@@ -31,14 +44,13 @@ describe('orders and payments', () => {
     await user.type(screen.getByLabelText('Fecha del evento'), dateValue);
     await user.type(screen.getByLabelText('Hora'), '15:00');
     await user.type(screen.getByLabelText('Resumen'), 'Chocolate birthday cake');
-    await user.type(screen.getByLabelText('Producto'), 'Chocolate birthday cake');
-    await user.clear(screen.getByLabelText('Precio unitario'));
-    await user.type(screen.getByLabelText('Precio unitario'), '2500');
+    await user.selectOptions(await screen.findByLabelText('Receta 1'), 'Chocolate birthday cake');
 
     await user.selectOptions(screen.getByLabelText('Tipo'), 'DELIVERY');
     await user.type(screen.getByLabelText('Dirección'), 'Calle 123');
     await user.click(screen.getByRole('button', { name: 'Guardar pedido' }));
 
+    expect(await screen.findByRole('button', { name: 'Registrar pago' })).toBeInTheDocument();
     expect((await screen.findAllByText('Chocolate birthday cake')).length).toBeGreaterThan(0);
 
     await user.click(screen.getByRole('button', { name: 'Registrar pago' }));
@@ -60,14 +72,45 @@ describe('orders and payments', () => {
     expect(screen.getByText('Sin comprobante')).toBeInTheDocument();
   });
 
+  it('creates an order with several recipes and quantities', async () => {
+    const client = addClient({ name: 'María Pérez' });
+    seedCatalog();
+    const user = userEvent.setup();
+
+    renderApp(
+      <Routes>
+        <Route path="/orders/new" element={<NewOrderPage />} />
+        <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+      </Routes>,
+      { route: `/orders/new?clientId=${client.id}` },
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'María Pérez' }));
+    const eventDate = new Date();
+    eventDate.setDate(eventDate.getDate() + 2);
+    const dateValue = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}-${String(eventDate.getDate()).padStart(2, '0')}`;
+    await user.type(screen.getByLabelText('Fecha del evento'), dateValue);
+    await user.selectOptions(await screen.findByLabelText('Receta 1'), 'Torta de chocolate');
+    await user.click(screen.getByRole('button', { name: 'Agregar receta' }));
+    await user.selectOptions(screen.getByLabelText('Receta 2'), 'Cupcakes de vainilla');
+    await user.click(screen.getByRole('button', { name: 'Guardar pedido' }));
+
+    expect(await screen.findByText('2 recetas')).toBeInTheDocument();
+    expect(screen.getByText('Torta de chocolate')).toBeInTheDocument();
+    expect(screen.getByText('Cupcakes de vainilla')).toBeInTheDocument();
+  });
+
   it('records a conversation on the order timeline', async () => {
     const client = addClient({ name: 'María Pérez' });
+    const recipe = seedCakeRecipe();
     const order = addOrder(client.id, {
       description: 'Torta de chocolate',
       items: [
         {
           id: 'item-1',
           orderId: 'pending',
+          recipeId: recipe.id,
+          recipe: { id: recipe.id, name: recipe.name },
           description: 'Torta de chocolate',
           quantity: 1,
           unitPrice: 2500,
@@ -98,6 +141,7 @@ describe('orders and payments', () => {
 
   it('edits products and deletes an order', async () => {
     const client = addClient({ name: 'María Pérez' });
+    const recipe = seedCakeRecipe();
     const order = addOrder(client.id, {
       description: 'Torta original',
       eventDate: '2026-09-20',
@@ -106,6 +150,8 @@ describe('orders and payments', () => {
         {
           id: 'item-1',
           orderId: 'pending',
+          recipeId: recipe.id,
+          recipe: { id: recipe.id, name: recipe.name },
           description: 'Torta original',
           quantity: 1,
           unitPrice: 2500,

@@ -12,7 +12,12 @@ const ClientDetailPage = lazy(() => import('@/app/routes/client-detail-page').th
 const OrdersRoute = lazy(() => import('@/features/orders/routes/orders-route').then((m) => ({ default: m.OrdersRoute })));
 const NewOrderPage = lazy(() => import('@/app/routes/new-order-page').then((m) => ({ default: m.NewOrderPage })));
 const OrderDetailPage = lazy(() => import('@/app/routes/order-detail-page').then((m) => ({ default: m.OrderDetailPage })));
-const EditOrderPage = lazy(() => import('@/features/orders/routes/edit-order-page').then((m) => ({ default: m.EditOrderPage })));
+const EditOrderPage = lazy(() => import('@/app/routes/edit-order-page').then((m) => ({ default: m.EditOrderPage })));
+const IngredientsRoute = lazy(() => import('@/features/ingredients/routes/ingredients-route').then((m) => ({ default: m.IngredientsRoute })));
+const RecipesRoute = lazy(() => import('@/features/recipes/routes/recipes-route').then((m) => ({ default: m.RecipesRoute })));
+const NewRecipePage = lazy(() => import('@/app/routes/new-recipe-page').then((m) => ({ default: m.NewRecipePage })));
+const RecipeDetailPage = lazy(() => import('@/app/routes/recipe-detail-page').then((m) => ({ default: m.RecipeDetailPage })));
+const EditRecipePage = lazy(() => import('@/app/routes/edit-recipe-page').then((m) => ({ default: m.EditRecipePage })));
 const CalendarRoute = lazy(() => import('@/features/calendar/routes/calendar-route').then((m) => ({ default: m.CalendarRoute })));
 const TasksRoute = lazy(() => import('@/features/tasks/routes/tasks-route').then((m) => ({ default: m.TasksRoute })));
 
@@ -36,6 +41,11 @@ export function AppRouter() {
               <Route path="/orders/new" element={<NewOrderPage />} />
               <Route path="/orders/:orderId/edit" element={<EditOrderPage />} />
               <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+              <Route path="/ingredients" element={<IngredientsRoute />} />
+              <Route path="/recipes" element={<RecipesRoute />} />
+              <Route path="/recipes/new" element={<NewRecipePage />} />
+              <Route path="/recipes/:recipeId/edit" element={<EditRecipePage />} />
+              <Route path="/recipes/:recipeId" element={<RecipeDetailPage />} />
               <Route path="/calendar" element={<CalendarRoute />} />
               <Route path="/tasks" element={<TasksRoute />} />
               <Route path="*" element={<NotFoundRoute />} />

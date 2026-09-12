@@ -45,7 +45,7 @@ export function OrderDetailPage() {
   const order = orderQuery.data;
   const sectionNavItems: SectionNavItem[] = [
     { href: '#resumen', label: 'Resumen' },
-    { href: '#productos', label: 'Productos' },
+    { href: '#productos', label: 'Recetas' },
     { href: '#pagos', label: 'Pagos' },
     { href: '#conversaciones', label: 'Conversaciones' },
     { href: '#tareas', label: 'Tareas' },
@@ -120,7 +120,7 @@ export function OrderDetailPage() {
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         title="¿Eliminar pedido?"
-        description="Se van a borrar el pedido, sus productos y los pagos. Las conversaciones del cliente se conservan."
+        description="Se van a borrar el pedido, sus recetas y los pagos. Las conversaciones del cliente se conservan."
         confirmLabel="Eliminar"
         destructive
         pending={remove.isPending}

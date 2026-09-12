@@ -3,6 +3,7 @@ import type { ListOrdersParams } from '@/types/api';
 import type { Order, Paginated } from '@/types/domain';
 
 export type OrderItemInput = {
+  recipeId?: string;
   description?: string;
   quantity: number;
   unitPrice?: number;
