@@ -1,0 +1,16 @@
+node_modules
+dist
+dist-ssr
+coverage
+.env
+.env.*
+*.local
+.git
+.cursor
+**/*.test.ts
+**/*.test.tsx
+src/testing
+README.md
+*.md
+.DS_Store
+*.tsbuildinfo
