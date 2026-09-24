@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Navigate, useLocation, useNavigate } from 'react-router';
-import { BrandLogo } from '@/components/common/brand-logo';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -49,13 +48,8 @@ export function LoginRoute() {
   return (
     <main className="flex min-h-svh flex-col overflow-y-auto px-4 py-6 sm:py-10">
       <div className="mx-auto my-auto w-full max-w-md rounded-2xl border bg-card p-5 shadow-sm sm:p-8">
-        <BrandLogo variant="wordmark" className="mx-auto h-auto w-full max-w-[16rem]" />
-        <p className="mt-1 text-center text-sm font-medium text-primary">Santa Lucía</p>
-        <h1 className="mt-6 text-2xl font-semibold tracking-tight">Iniciar sesión</h1>
-        <p className="mt-2 text-base leading-relaxed text-muted-foreground">
-          Ingresá para ver clientes, pedidos y el día de hoy.
-        </p>
-        <form className="mt-8 space-y-5" onSubmit={form.handleSubmit(onSubmit)} noValidate>
+        <h1 className="text-2xl font-semibold tracking-tight">Iniciar sesión</h1>
+        <form className="mt-6 space-y-5" onSubmit={form.handleSubmit(onSubmit)} noValidate>
             <Field className="gap-2">
               <Label htmlFor="email" className="text-base">
                 Correo
