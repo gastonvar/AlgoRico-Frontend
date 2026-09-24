@@ -30,6 +30,14 @@ const initialUser: User = {
   id: 'user-1',
   email: 'owner@algorico.local',
   active: true,
+  company: {
+    id: 'company-algorico',
+    name: 'Algo Rico',
+    slug: 'algorico',
+    subtitle: 'Santa Lucía',
+    logoMarkUrl: '/images/logo.png',
+    logoWordmarkUrl: '/images/logoandalgorico.png',
+  },
   createdAt: isoNow(),
   updatedAt: isoNow(),
 };
