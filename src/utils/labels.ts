@@ -32,7 +32,7 @@ export const orderStatusLabels: Record<OrderStatus, string> = {
 
 export const fulfillmentLabels: Record<FulfillmentType, string> = {
   PICKUP: 'Retiro',
-  DELIVERY: 'Entrega',
+  DELIVERY: 'Enviar',
 };
 
 export const paymentTypeLabels: Record<PaymentType, string> = {

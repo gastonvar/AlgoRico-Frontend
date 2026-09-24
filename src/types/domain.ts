@@ -180,6 +180,7 @@ export type Order = {
   eventTime: string | null;
   description: string | null;
   fulfillmentType: FulfillmentType;
+  deliveryDate: string | null;
   deliveryAddress: string | null;
   deliveryTime: string | null;
   notes: string | null;

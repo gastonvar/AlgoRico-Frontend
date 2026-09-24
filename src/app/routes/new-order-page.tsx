@@ -5,6 +5,7 @@ import { useClients } from '@/features/clients/hooks/use-clients';
 import { OrderForm } from '@/features/orders/components/order-form';
 import { useCreateOrder } from '@/features/orders/hooks/use-orders';
 import type { OrderFormValues } from '@/features/orders/schemas/order-schemas';
+import { toCreateOrderInput } from '@/features/orders/utils/order-form-payload';
 import { useRecipes } from '@/features/recipes/hooks/use-recipes';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { applyFieldErrors } from '@/lib/form-errors';
@@ -28,23 +29,7 @@ export function NewOrderPage() {
     try {
       const order = await create.mutateAsync({
         clientId: values.clientId,
-        input: {
-          status: values.status,
-          eventDate: values.eventDate,
-          eventTime: values.eventTime || undefined,
-          description: values.description || undefined,
-          fulfillmentType: values.fulfillmentType,
-          deliveryAddress: values.fulfillmentType === 'DELIVERY' ? values.deliveryAddress : undefined,
-          deliveryTime: values.fulfillmentType === 'DELIVERY' ? values.deliveryTime || undefined : undefined,
-          notes: values.notes || undefined,
-          totalAmount: Number(values.totalAmount),
-          items: values.items.map((item) => ({
-            recipeId: item.recipeId,
-            description: item.description,
-            quantity: Number(item.quantity),
-            unitPrice: Number(item.unitPrice) || 0,
-          })),
-        },
+        input: toCreateOrderInput(values),
       });
       toast.success('Pedido creado.');
       navigate(`/orders/${order.id}`);

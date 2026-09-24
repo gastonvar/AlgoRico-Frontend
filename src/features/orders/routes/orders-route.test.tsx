@@ -41,9 +41,10 @@ describe('orders and payments', () => {
     const eventDate = new Date();
     eventDate.setDate(eventDate.getDate() + 2);
     const dateValue = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}-${String(eventDate.getDate()).padStart(2, '0')}`;
-    await user.type(screen.getByLabelText('Fecha del evento'), dateValue);
-    await user.type(screen.getByLabelText('Hora'), '15:00');
+    await user.type(screen.getByLabelText(/Fecha del evento/), dateValue);
+    await user.type(screen.getByLabelText('Hora del evento'), '15:00');
     await user.type(screen.getByLabelText('Resumen'), 'Chocolate birthday cake');
+    await user.click(screen.getByRole('button', { name: 'Agregar receta' }));
     await user.selectOptions(await screen.findByLabelText('Receta 1'), 'Chocolate birthday cake');
 
     await user.selectOptions(screen.getByLabelText('Tipo'), 'DELIVERY');
@@ -89,7 +90,8 @@ describe('orders and payments', () => {
     const eventDate = new Date();
     eventDate.setDate(eventDate.getDate() + 2);
     const dateValue = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}-${String(eventDate.getDate()).padStart(2, '0')}`;
-    await user.type(screen.getByLabelText('Fecha del evento'), dateValue);
+    await user.type(screen.getByLabelText(/Fecha del evento/), dateValue);
+    await user.click(screen.getByRole('button', { name: 'Agregar receta' }));
     await user.selectOptions(await screen.findByLabelText('Receta 1'), 'Torta de chocolate');
     await user.click(screen.getByRole('button', { name: 'Agregar receta' }));
     await user.selectOptions(screen.getByLabelText('Receta 2'), 'Cupcakes de vainilla');
@@ -98,6 +100,29 @@ describe('orders and payments', () => {
     expect(await screen.findByText('2 recetas')).toBeInTheDocument();
     expect(screen.getByText('Torta de chocolate')).toBeInTheDocument();
     expect(screen.getByText('Cupcakes de vainilla')).toBeInTheDocument();
+  });
+
+  it('creates an order without recipes when the final price is set', async () => {
+    const client = addClient({ name: 'María Pérez' });
+    const user = userEvent.setup();
+
+    renderApp(
+      <Routes>
+        <Route path="/orders/new" element={<NewOrderPage />} />
+        <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+      </Routes>,
+      { route: `/orders/new?clientId=${client.id}` },
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'María Pérez' }));
+    await user.clear(screen.getByLabelText('Precio final'));
+    await user.type(screen.getByLabelText('Precio final'), '18000');
+    await user.selectOptions(screen.getByLabelText('Tipo'), 'DELIVERY');
+    await user.type(screen.getByLabelText('Dirección'), 'Calle 123');
+    await user.click(screen.getByRole('button', { name: 'Guardar pedido' }));
+
+    expect(await screen.findByRole('button', { name: 'Registrar pago' })).toBeInTheDocument();
+    expect(screen.getByText('Sin fecha de evento')).toBeInTheDocument();
   });
 
   it('records a conversation on the order timeline', async () => {

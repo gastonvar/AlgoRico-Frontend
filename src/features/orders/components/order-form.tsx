@@ -59,12 +59,13 @@ export function OrderForm({
       eventTime: '',
       status: 'LEAD',
       fulfillmentType: 'PICKUP',
+      deliveryDate: '',
       deliveryAddress: '',
       deliveryTime: '',
       notes: '',
       description: '',
       totalAmount: 0,
-      items: [createEmptyItem()],
+      items: [],
       ...initialValues,
     },
   });
@@ -72,6 +73,7 @@ export function OrderForm({
   const items = useFieldArray({ control: form.control, name: 'items' });
   const fulfillmentType = form.watch('fulfillmentType');
   const eventDate = form.watch('eventDate');
+  const deliveryDate = form.watch('deliveryDate');
   const watchedItems = form.watch('items');
   const itemsTotal = suggestedOrderTotal(watchedItems);
   const recipeById = new Map(recipes.map((recipe) => [recipe.id, recipe]));
@@ -90,11 +92,11 @@ export function OrderForm({
   }, [form, itemsTotal, totalManuallyEdited]);
 
   return (
-    <form className="space-y-4 lg:space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
+    <form className="space-y-4 lg:space-y-6" noValidate onSubmit={form.handleSubmit(onSubmit)}>
       <section className="space-y-4 rounded-xl border bg-card p-4 lg:p-5">
         <div>
           <h2 className="text-base font-semibold lg:text-lg">Cliente y fecha</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Quién pide y cuándo es el evento.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Quién pide y cuándo es el evento, si ya lo sabés.</p>
         </div>
         {lockClient ? (
           <Field>
@@ -126,7 +128,9 @@ export function OrderForm({
         )}
         <div className="grid gap-4 sm:grid-cols-2">
           <Field>
-            <Label htmlFor="eventDate">Fecha del evento</Label>
+            <Label htmlFor="eventDate">
+              Fecha del evento <span className="font-normal text-muted-foreground">(opcional)</span>
+            </Label>
             <Input id="eventDate" type="date" {...form.register('eventDate')} />
             <FieldError>{form.formState.errors.eventDate?.message}</FieldError>
             {eventDate && isDateOnlyInPast(eventDate) ? (
@@ -134,8 +138,18 @@ export function OrderForm({
             ) : null}
           </Field>
           <Field>
-            <Label htmlFor="eventTime">Hora</Label>
+            <Label htmlFor="eventTime">Hora del evento</Label>
             <Input id="eventTime" type="time" {...form.register('eventTime')} />
+          </Field>
+          <Field>
+            <Label htmlFor="deliveryDate">
+              Fecha de entrega <span className="font-normal text-muted-foreground">(opcional)</span>
+            </Label>
+            <Input id="deliveryDate" type="date" {...form.register('deliveryDate')} />
+            <FieldError>{form.formState.errors.deliveryDate?.message}</FieldError>
+            {deliveryDate && isDateOnlyInPast(deliveryDate) ? (
+              <p className="text-sm text-warning-foreground">Esta fecha ya pasó. Podés guardarla igual si es un pedido viejo.</p>
+            ) : null}
           </Field>
         </div>
         <Field>
@@ -164,13 +178,16 @@ export function OrderForm({
           <div>
             <h2 className="text-base font-semibold lg:text-lg">Recetas</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Un pedido puede tener varias recetas. Cada línea es una receta y cuántas van.
+              Podés guardar el pedido sin recetas. El precio final sí es obligatorio.
             </p>
           </div>
           <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => items.append(createEmptyItem())}>
             Agregar receta
           </Button>
         </div>
+        {items.fields.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Todavía no hay recetas en este pedido.</p>
+        ) : null}
         {items.fields.map((field, index) => (
           <div key={field.id} className="space-y-3 rounded-lg border p-3">
             <div className="flex items-start justify-between gap-2">
@@ -190,9 +207,7 @@ export function OrderForm({
                 </NativeSelect>
                 <FieldError>{form.formState.errors.items?.[index]?.recipeId?.message}</FieldError>
               </Field>
-              {items.fields.length > 1 ? (
-                <ItemActions deleteLabel="Quitar receta" onDelete={() => items.remove(index)} />
-              ) : null}
+              <ItemActions deleteLabel="Quitar receta" onDelete={() => items.remove(index)} />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field>
@@ -229,7 +244,7 @@ export function OrderForm({
             })}
           />
           <p className="text-sm text-muted-foreground">
-            Arranca como receta × cantidad ({formatMoney(itemsTotal)}). Lo podés editar.
+            Si hay recetas, arranca como receta × cantidad ({formatMoney(itemsTotal)}). Lo podés editar.
           </p>
           <FieldError>{form.formState.errors.totalAmount?.message}</FieldError>
         </Field>
