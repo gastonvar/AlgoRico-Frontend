@@ -17,13 +17,11 @@ function AuthApp() {
 }
 
 describe('authentication', () => {
-  it('shows the brand wordmark on the login screen', async () => {
+  it('does not show company branding before login', async () => {
     renderApp(<AuthApp />, { route: '/login' });
 
-    expect(await screen.findByRole('img', { name: 'Algo Rico' })).toHaveAttribute(
-      'src',
-      '/images/logoandalgorico.png',
-    );
+    expect(await screen.findByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument();
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
 
   it('logs in with valid credentials', async () => {

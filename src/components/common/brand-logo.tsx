@@ -14,9 +14,9 @@ type BrandLogoProps = {
 };
 
 /**
- * Renders the current company's brand mark or wordmark. Before a company is
- * known (e.g. the login screen, before authentication resolves) it falls
- * back to the default Algo Rico platform branding.
+ * Renders the current company's brand mark or wordmark. Only use this after
+ * the session is known; the login screen stays unbranded because the tenant
+ * is not known yet. Falls back to Algo Rico assets if a company has no logos.
  */
 export function BrandLogo({ variant = 'mark', className, decorative = false }: BrandLogoProps) {
   const company = useAuthStore((state) => state.user?.company);
