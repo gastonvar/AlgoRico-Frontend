@@ -161,6 +161,7 @@ export const handlers = [
       eventTime?: string;
       description?: string;
       fulfillmentType?: 'DELIVERY' | 'PICKUP';
+      deliveryDate?: string;
       deliveryAddress?: string;
       deliveryTime?: string;
       items?: Array<{ recipeId?: string; description?: string; quantity: number; unitPrice?: number; notes?: string }>;

@@ -10,26 +10,32 @@ const orderItemSchema = z.object({
   notes: z.string().optional(),
 });
 
+const optionalDate = z
+  .string()
+  .optional()
+  .transform((value) => (value?.trim() ? value : undefined));
+
 export const orderFormSchema = z
   .object({
     clientId: z.string().min(1, 'Elegí un cliente.'),
-    eventDate: z.string().min(1, 'La fecha del evento es obligatoria.'),
-    eventTime: z.string().optional(),
+    eventDate: optionalDate,
+    eventTime: optionalDate,
     status: z.enum(ORDER_STATUSES).optional(),
     fulfillmentType: z.enum(FULFILLMENT_TYPES),
+    deliveryDate: optionalDate,
     deliveryAddress: z.string().optional(),
-    deliveryTime: z.string().optional(),
+    deliveryTime: optionalDate,
     notes: z.string().optional(),
     description: z.string().optional(),
-    totalAmount: z.coerce.number().nonnegative('El precio no puede ser negativo.'),
-    items: z.array(orderItemSchema).min(1, 'Agregá al menos una receta.'),
+    totalAmount: z.coerce.number().nonnegative('El precio final es obligatorio.'),
+    items: z.array(orderItemSchema),
   })
   .superRefine((value, ctx) => {
     if (value.fulfillmentType === 'DELIVERY' && !value.deliveryAddress?.trim()) {
       ctx.addIssue({
         code: 'custom',
         path: ['deliveryAddress'],
-        message: 'La dirección es obligatoria para entregas.',
+        message: 'La dirección es obligatoria para envíos.',
       });
     }
   });

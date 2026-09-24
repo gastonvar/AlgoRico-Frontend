@@ -30,6 +30,12 @@ export function OrderDetailHeader({ order, onDelete }: OrderDetailHeaderProps) {
             ) : (
               'Sin fecha de evento'
             )}
+            {order.deliveryDate ? (
+              <>
+                {' · Entrega '}
+                <DateDisplay value={order.deliveryDate} mode="event" time={order.deliveryTime} />
+              </>
+            ) : null}
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">

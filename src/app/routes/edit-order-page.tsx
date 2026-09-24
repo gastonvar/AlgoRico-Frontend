@@ -7,6 +7,7 @@ import { OrderForm } from '@/features/orders/components/order-form';
 import { useOrder, useUpdateOrder } from '@/features/orders/hooks/use-orders';
 import type { OrderFormValues } from '@/features/orders/schemas/order-schemas';
 import { useRecipes } from '@/features/recipes/hooks/use-recipes';
+import { toUpdateOrderInput } from '@/features/orders/utils/order-form-payload';
 import { applyFieldErrors } from '@/lib/form-errors';
 import { ApiError, getErrorMessage } from '@/lib/api-error';
 import type { Order } from '@/types/domain';
@@ -19,22 +20,20 @@ function valuesFromOrder(order: Order): Partial<OrderFormValues> {
     eventTime: order.eventTime ?? '',
     status: order.status,
     fulfillmentType: order.fulfillmentType,
+    deliveryDate: order.deliveryDate ?? '',
     deliveryAddress: order.deliveryAddress ?? '',
     deliveryTime: order.deliveryTime ?? '',
     notes: order.notes ?? '',
     description: order.description ?? '',
     totalAmount: order.totalAmount,
-    items:
-      order.items.length > 0
-        ? order.items.map((item) => ({
-            itemId: item.id,
-            recipeId: item.recipeId ?? '',
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            notes: item.notes ?? '',
-          }))
-        : [{ itemId: undefined, recipeId: '', description: '', quantity: 1, unitPrice: 0, notes: '' }],
+    items: order.items.map((item) => ({
+      itemId: item.id,
+      recipeId: item.recipeId ?? '',
+      description: item.description,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      notes: item.notes ?? '',
+    })),
   };
 }
 
@@ -62,25 +61,7 @@ export function EditOrderPage() {
 
   async function handleSubmit(values: OrderFormValues) {
     try {
-      await update.mutateAsync({
-        status: values.status,
-        eventDate: values.eventDate,
-        eventTime: values.eventTime || null,
-        description: values.description || null,
-        fulfillmentType: values.fulfillmentType,
-        deliveryAddress: values.fulfillmentType === 'DELIVERY' ? values.deliveryAddress || null : null,
-        deliveryTime: values.fulfillmentType === 'DELIVERY' ? values.deliveryTime || null : null,
-        notes: values.notes || null,
-        totalAmount: Number(values.totalAmount),
-        items: values.items.map((item) => ({
-          id: item.itemId,
-          recipeId: item.recipeId,
-          description: item.description,
-          quantity: Number(item.quantity),
-          unitPrice: Number(item.unitPrice) || 0,
-          notes: item.notes || undefined,
-        })),
-      });
+      await update.mutateAsync(toUpdateOrderInput(values));
       toast.success('Pedido actualizado.');
       navigate(`/orders/${orderId}`);
     } catch (error) {

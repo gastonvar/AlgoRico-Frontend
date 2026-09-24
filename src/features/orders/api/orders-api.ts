@@ -16,10 +16,11 @@ export type CreateOrderInput = {
   eventTime?: string;
   description?: string;
   fulfillmentType?: string;
+  deliveryDate?: string;
   deliveryAddress?: string;
   deliveryTime?: string;
   notes?: string;
-  totalAmount?: number;
+  totalAmount: number;
   items?: OrderItemInput[];
 };
 
@@ -29,6 +30,7 @@ export type UpdateOrderInput = {
   eventTime?: string | null;
   description?: string | null;
   fulfillmentType?: string;
+  deliveryDate?: string | null;
   deliveryAddress?: string | null;
   deliveryTime?: string | null;
   notes?: string | null;

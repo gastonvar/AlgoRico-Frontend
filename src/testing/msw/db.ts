@@ -284,6 +284,7 @@ export function addOrder(
     eventTime: input.eventTime ?? null,
     description: input.description ?? null,
     fulfillmentType: input.fulfillmentType ?? 'PICKUP',
+    deliveryDate: input.deliveryDate ?? null,
     deliveryAddress: input.deliveryAddress ?? null,
     deliveryTime: input.deliveryTime ?? null,
     notes: input.notes ?? null,

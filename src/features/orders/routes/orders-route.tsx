@@ -161,6 +161,8 @@ function OrderListCard({ order }: { order: Order }) {
             <span aria-hidden="true"> · </span>
             {order.eventDate ? (
               <DateDisplay value={order.eventDate} mode="event" time={order.eventTime} />
+            ) : order.deliveryDate ? (
+              <DateDisplay value={order.deliveryDate} mode="event" time={order.deliveryTime} />
             ) : (
               'Sin fecha'
             )}
