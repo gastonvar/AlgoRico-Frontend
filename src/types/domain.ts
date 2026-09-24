@@ -44,10 +44,20 @@ export type IngredientUnit = (typeof INGREDIENT_UNITS)[number];
 export const CSRF_COOKIE_NAME = 'algorico.csrf';
 export const CSRF_HEADER_NAME = 'x-csrf-token';
 
+export type Company = {
+  id: string;
+  name: string;
+  slug: string;
+  subtitle: string | null;
+  logoMarkUrl: string | null;
+  logoWordmarkUrl: string | null;
+};
+
 export type User = {
   id: string;
   email: string;
   active: boolean;
+  company: Company;
   createdAt: string;
   updatedAt: string;
 };

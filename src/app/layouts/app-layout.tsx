@@ -173,6 +173,7 @@ function MobileTabBar() {
 
 export function AppLayout({ children }: { children?: ReactNode }) {
   const location = useLocation();
+  const company = useAuthStore((state) => state.user?.company);
 
   return (
     <div className="min-h-svh bg-background lg:grid lg:grid-cols-[16rem_1fr]">
@@ -180,8 +181,12 @@ export function AppLayout({ children }: { children?: ReactNode }) {
         <div className="mb-8 flex items-center gap-3 px-2">
           <BrandLogo decorative className="h-12 w-12 shrink-0" />
           <div className="min-w-0">
-            <p className="text-lg font-semibold leading-tight text-primary">Algo Rico</p>
-            <p className="text-xs text-muted-foreground">Santa Lucía</p>
+            <p className="text-lg font-semibold leading-tight text-primary">
+              {company?.name ?? 'Algo Rico'}
+            </p>
+            {company?.subtitle ? (
+              <p className="text-xs text-muted-foreground">{company.subtitle}</p>
+            ) : null}
           </div>
         </div>
         <NavList />
